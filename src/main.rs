@@ -2,14 +2,15 @@ use bevy::prelude::*;
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
 
-mod player;
-mod velocity;
-mod triggers;
 mod collide;
+mod player;
+mod triggers;
+mod velocity;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .insert_resource(Msaa { samples: 1 })
         .add_plugin(VelocityPlugin)
         .add_plugin(PlayerPlugin)
         .add_startup_system(setup)

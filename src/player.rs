@@ -20,7 +20,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("cell_tower.png"),
             sprite: Sprite {
-                custom_size: Some(Vec2::new(50.0, 100.0)),
+                custom_size: Some(Vec2::new(100.0, 200.0)),
                 ..default()
             },
             transform: Transform {
@@ -36,7 +36,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("robot.png"),
             sprite: Sprite {
-                custom_size: Some(Vec2::new(50.0, 50.0)),
+                custom_size: Some(Vec2::new(100.0, 100.0)),
                 ..default()
             },
             transform: Transform {
