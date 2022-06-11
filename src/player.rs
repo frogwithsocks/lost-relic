@@ -14,7 +14,8 @@ impl Plugin for PlayerPlugin {
 }
 #[derive(Component)]
 struct CellTower;
-fn spawn_player(mut commands: Commands) {
+fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // TODO move to another function probably in map.rs
     commands
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
@@ -29,12 +30,13 @@ fn spawn_player(mut commands: Commands) {
             ..default()
         })
         .insert(CellTower);
+    
 
     commands
         .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("robot.png"),
             sprite: Sprite {
-                color: Color::rgb(133.0 / 255.0, 193.0 / 255.0, 220.0 / 255.0),
-                custom_size: Some(Vec2::new(50.0, 75.0)),
+                custom_size: Some(Vec2::new(50.0, 50.0)),
                 ..default()
             },
             transform: Transform {
