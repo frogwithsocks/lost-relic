@@ -19,17 +19,17 @@ fn test_floor(mut commands: Commands) {
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
                 color: Color::RED,
-                custom_size: Some(Vec2::new(500f32, 100f32)),
+                custom_size: Some(Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE)),
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(0f32, -300f32, 0f32),
+                translation: Vec3::new(0f32, -BLOCK_SIZE * 3.0, 0f32),
                 ..default()
             },
             ..default()
         })
         .insert(Collider {
-            size: Vec2::new(500f32, 100f32),
+            size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
             r#type: ColliderType::Solid,
         });
 
@@ -37,17 +37,17 @@ fn test_floor(mut commands: Commands) {
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
                 color: Color::RED,
-                custom_size: Some(Vec2::new(500f32, 100f32)),
+                custom_size: Some(Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE)),
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(-300f32, 150f32, 0f32),
+                translation: Vec3::new(-BLOCK_SIZE * 3.0, BLOCK_SIZE * 2.0, 0f32),
                 ..default()
             },
             ..default()
         })
         .insert(Collider {
-            size: Vec2::new(500f32, 100f32),
+            size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
             r#type: ColliderType::Solid,
         });
 
@@ -55,17 +55,17 @@ fn test_floor(mut commands: Commands) {
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
                 color: Color::BLUE,
-                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2f32)),
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(0f32, -200f32, 0f32),
+                translation: Vec3::new(0f32, -BLOCK_SIZE * 2.0, 0f32),
                 ..default()
             },
             ..default()
         })
         .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2f32),
+            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
             r#type: ColliderType::Solid,
         });
 }
@@ -105,19 +105,24 @@ pub struct Collider {
 fn check_collisions(
     mut commands: Commands,
     mut events: EventWriter<PlayerEvent>,
-    mut player_query: Query<(&mut Velocity, &mut Transform, &Sprite, &mut Player), With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Transform, Option<&Sprite>, Option<&TextureAtlasSprite>, &mut Player), With<Player>>,
     collider_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
 ) {
-    let (mut player_velocity, mut player_transform, player_sprite, mut player) = player_query.single_mut();
+    let (mut player_velocity, mut player_transform, maybe_sprite, maybe_atlas_sprite, mut player) = player_query.single_mut();
+    let mut player_size: Option<Vec2> = None;
+    player_size = maybe_sprite.map(|s| s.custom_size.unwrap());
+    player_size = maybe_atlas_sprite.map(|s| s.custom_size.unwrap());
+
+    let player_size = player_size.expect("Entity must have Sprite.custom_size or TextureAltasSprite.custom_size in order to preform collisions");
+
     player.on_ground = false;
     for (collider_entity, transform, collider) in collider_query.iter() {
         if let Some(collision) = collide(
             transform.translation,
             collider.size,
             player_transform.translation,
-            player_sprite.custom_size.unwrap(),
+            player_size,
         ) {
-            println!("{:?}", collision);
             if matches!(collision, Collision::Bottom) {
                 player.on_ground = true;
             }
@@ -128,7 +133,7 @@ fn check_collisions(
                         &collision,
                         &mut player_transform,
                         pos,
-                        player_sprite.custom_size.unwrap(),
+                        player_size,
                         transform.translation,
                         collider.size,
                     );

@@ -11,13 +11,15 @@ impl Plugin for VelocityPlugin {
 #[derive(Component, Default, Debug)]
 pub struct Velocity {
     pub linvel: Vec3,
-    pub drag: f32,
+    pub drag: Vec3,
 }
 
 fn update_velocity(mut query: Query<(&mut Velocity, &mut Transform)>, time: Res<Time>) {
     for (mut velocity, mut transform) in query.iter_mut() {
         let drag = velocity.drag;
         transform.translation += velocity.linvel * time.delta_seconds();
-        velocity.linvel.x *= drag * time.delta_seconds();
+        velocity.linvel.x = velocity.linvel.x - (time.delta_seconds() * velocity.linvel.x * drag.x);
+        velocity.linvel.y = velocity.linvel.y - (time.delta_seconds() * velocity.linvel.y * drag.y);
+
     }
 }

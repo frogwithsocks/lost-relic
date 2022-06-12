@@ -1,4 +1,8 @@
-use crate::{map::{BLOCK_SIZE, CellTower}, velocity::Velocity};
+use crate::{
+    animation::Animation,
+    map::{CellTower, BLOCK_SIZE},
+    velocity::Velocity,
+};
 
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -14,12 +18,19 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_player(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    let texture_handle = asset_server.load("robot.png");
+    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(22.0, 32.0), 4, 1);
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
     commands
-        .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("robot.png"),
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(100.0, 100.0)),
+        .spawn_bundle(SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle,
+            sprite: TextureAtlasSprite {
+                custom_size: Some(Vec2::new((22.0 / 32.0) * BLOCK_SIZE, BLOCK_SIZE)),
                 ..default()
             },
             transform: Transform {
@@ -28,14 +39,14 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             ..default()
         })
-        .insert(Player {
-            latency: 0,
-            queue: VecDeque::new(),
-            on_ground: false,
-        })
+        .insert(Player::default())
         .insert(Velocity {
-            drag: 0.95,
+            drag: Vec3::new(20.0, 10.0, 0.0),
             ..default()
+        })
+        .insert(Animation {
+            timer: Timer::from_seconds(0.2, true),
+            running: false,
         });
 }
 
@@ -46,7 +57,9 @@ enum GameInput {
     Jump,
 }
 
-#[derive(Component, Debug)]
+// TODO move to another file
+
+#[derive(Component, Debug, Default)]
 pub struct Player {
     // # of ticks before register TODO make it millisecionds,
     latency: usize,
@@ -60,7 +73,14 @@ fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&m
     let mut inputs: Vec<GameInput> = keyboard_input
         .get_pressed()
         .filter_map(|input| match input {
-            KeyCode::W | KeyCode::Up => Some(GameInput::Jump),
+            KeyCode::W | KeyCode::Up => {
+                if keyboard_input.just_pressed(KeyCode::W)
+                    || keyboard_input.just_pressed(KeyCode::Up)
+                {
+                    return Some(GameInput::Jump);
+                }
+                None
+            }
             KeyCode::A | KeyCode::Left => Some(GameInput::Left),
             KeyCode::D | KeyCode::Right => Some(GameInput::Right),
             _ => None,
@@ -83,44 +103,48 @@ fn print_player_inputs(player_query: Query<&Player>) {
 
 //TODO only pop when delta time is over some amount
 fn update_player(
-    mut player_query: Query<(&mut Player, &mut Velocity, &mut Sprite)>,
-    time: Res<Time>,
+    mut player_query: Query<(
+        &mut Player,
+        &mut Velocity,
+        &mut TextureAtlasSprite,
+        &mut Animation,
+    )>,
 ) {
-    let (mut player, mut velocity, mut player_sprite) = player_query.single_mut();
+    let (mut player, mut velocity, mut player_sprite, mut animation) = player_query.single_mut();
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
+    animation.running = false;
     for input in inputs {
         match input {
             GameInput::Jump => {
-                if player.on_ground { velocity.linvel += Vec3::Y * 800f32; }
-            },
+                if player.on_ground {
+                    velocity.linvel += Vec3::Y * 2225f32;
+                }
+            }
             GameInput::Left => {
                 // player starts off facing right so facing left is true
                 // facing right is false
-                if !player_sprite.flip_x {
-                    player_sprite.flip_x = true;
-                }
-                velocity.linvel += Vec3::X * -200.0
-            },
+                player_sprite.flip_x = true;
+                animation.running = true;
+                velocity.linvel += Vec3::X * -150.0
+            }
             GameInput::Right => {
-                if player_sprite.flip_x {
-                    player_sprite.flip_x = false;
-                }
-                velocity.linvel += Vec3::X * 200.0
-            },
+                player_sprite.flip_x = false;
+                animation.running = true;
+                velocity.linvel += Vec3::X * 150.0
+            }
         }
     }
-    velocity.linvel.y -= 100.0;
+    velocity.linvel.y -= 150.0;
 }
 
 fn update_latency(
     mut player_query: Query<(&Transform, &mut Player)>,
-    cell_tower_query: Query<&Transform, With<CellTower>>,
+    cell_tower_query: Query<(&Transform, &CellTower)>,
 ) {
     let (transform, mut player) = player_query.single_mut();
     let mut shortest = f32::MAX;
-    for cell_tower_transform in cell_tower_query.iter() {
-        shortest = cell_tower_transform
-            .translation
+    for (cell_tower_transform, cell_tower) in cell_tower_query.iter() {
+        shortest = (cell_tower_transform.translation + cell_tower.offset)
             .distance(transform.translation)
             .min(shortest);
     }
