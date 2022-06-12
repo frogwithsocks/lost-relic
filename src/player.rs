@@ -31,6 +31,7 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Player {
             latency: 0,
             queue: VecDeque::new(),
+            on_ground: false,
         })
         .insert(Velocity {
             drag: 0.95,
@@ -50,6 +51,7 @@ pub struct Player {
     // # of ticks before register TODO make it millisecionds,
     latency: usize,
     queue: VecDeque<Vec<GameInput>>,
+    pub on_ground: bool,
 }
 
 fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&mut Player>) {
@@ -76,7 +78,7 @@ fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&m
 
 fn print_player_inputs(player_query: Query<&Player>) {
     let player = player_query.single();
-    println!("{:?}", player);
+    println!("{:?}", player.queue);
 }
 
 //TODO only pop when delta time is over some amount
@@ -88,7 +90,9 @@ fn update_player(
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
     for input in inputs {
         match input {
-            GameInput::Jump => velocity.linvel += Vec3::Y * BLOCK_SIZE,
+            GameInput::Jump => {
+                if player.on_ground { velocity.linvel += Vec3::Y * 800f32; }
+            },
             GameInput::Left => {
                 // player starts off facing right so facing left is true
                 // facing right is false
@@ -96,16 +100,16 @@ fn update_player(
                     player_sprite.flip_x = true;
                 }
                 velocity.linvel += Vec3::X * -200.0
-            }
+            },
             GameInput::Right => {
                 if player_sprite.flip_x {
                     player_sprite.flip_x = false;
                 }
                 velocity.linvel += Vec3::X * 200.0
-            }
+            },
         }
     }
-    velocity.linvel.y -= 10.0;
+    velocity.linvel.y -= 100.0;
 }
 
 fn update_latency(

@@ -2,6 +2,14 @@ use bevy::prelude::*;
 
 pub const BLOCK_SIZE: f32 = 50.0;
 
+pub struct MapPlugin;
+
+impl Plugin for MapPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(spawn_cell_tower);
+    }
+}
+
 #[derive(Component)]
 pub struct CellTower;
 

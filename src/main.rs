@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use collide::{CollidePlugin, PlayerEvent};
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
+use map::MapPlugin;
 
 mod collide;
 mod player;
@@ -17,6 +18,7 @@ fn main() {
         .add_plugin(VelocityPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(CollidePlugin)
+        .add_plugin(MapPlugin)
         .add_startup_system(setup)
         .run();
 }

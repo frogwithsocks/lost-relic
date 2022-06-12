@@ -3,7 +3,7 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
-use crate::{player::Player, velocity::Velocity};
+use crate::{map::BLOCK_SIZE, player::Player, velocity::Velocity};
 
 pub struct CollidePlugin;
 
@@ -50,6 +50,24 @@ fn test_floor(mut commands: Commands) {
             size: Vec2::new(500f32, 100f32),
             r#type: ColliderType::Solid,
         });
+
+    commands
+        .spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::BLUE,
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2f32)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::new(0f32, -200f32, 0f32),
+                ..default()
+            },
+            ..default()
+        })
+        .insert(Collider {
+            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2f32),
+            r#type: ColliderType::Solid,
+        });
 }
 
 fn check_collision(
@@ -87,10 +105,11 @@ pub struct Collider {
 fn check_collisions(
     mut commands: Commands,
     mut events: EventWriter<PlayerEvent>,
-    mut player_query: Query<(&mut Velocity, &mut Transform, &Sprite), With<Player>>,
+    mut player_query: Query<(&mut Velocity, &mut Transform, &Sprite, &mut Player), With<Player>>,
     collider_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
 ) {
-    let (mut player_velocity, mut player_transform, player_sprite) = player_query.single_mut();
+    let (mut player_velocity, mut player_transform, player_sprite, mut player) = player_query.single_mut();
+    player.on_ground = false;
     for (collider_entity, transform, collider) in collider_query.iter() {
         if let Some(collision) = collide(
             transform.translation,
@@ -98,6 +117,10 @@ fn check_collisions(
             player_transform.translation,
             player_sprite.custom_size.unwrap(),
         ) {
+            println!("{:?}", collision);
+            if matches!(collision, Collision::Bottom) {
+                player.on_ground = true;
+            }
             let pos = player_transform.translation;
             match collider.r#type {
                 ColliderType::Solid => {

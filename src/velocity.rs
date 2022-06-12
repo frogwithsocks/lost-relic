@@ -18,6 +18,6 @@ fn update_velocity(mut query: Query<(&mut Velocity, &mut Transform)>, time: Res<
     for (mut velocity, mut transform) in query.iter_mut() {
         let drag = velocity.drag;
         transform.translation += velocity.linvel * time.delta_seconds();
-        velocity.linvel *= drag * time.delta_seconds();
+        velocity.linvel.x *= drag * time.delta_seconds();
     }
 }
