@@ -14,7 +14,6 @@ pub struct Velocity {
     pub drag: f32,
 }
 
-
 fn update_velocity(mut query: Query<(&mut Velocity, &mut Transform)>, time: Res<Time>) {
     for (mut velocity, mut transform) in query.iter_mut() {
         let drag = velocity.drag;

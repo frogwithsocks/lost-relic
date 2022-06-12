@@ -1,7 +1,7 @@
 use bevy::prelude::*;
+use collide::CollidePlugin;
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
-use collide::CollidePlugin;
 
 mod collide;
 mod player;

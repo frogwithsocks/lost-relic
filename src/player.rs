@@ -1,6 +1,4 @@
-use crate::{
-    velocity::Velocity,
-};
+use crate::velocity::Velocity;
 
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -34,7 +32,6 @@ fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         })
         .insert(CellTower);
-    
 
     commands
         .spawn_bundle(SpriteBundle {
@@ -101,7 +98,10 @@ fn print_player_inputs(player_query: Query<&Player>) {
 }
 
 //TODO only pop when delta time is over some amount
-fn update_player(mut player_query: Query<(&mut Player, &mut Velocity, &mut Sprite)>, time: Res<Time>) {
+fn update_player(
+    mut player_query: Query<(&mut Player, &mut Velocity, &mut Sprite)>,
+    time: Res<Time>,
+) {
     let (mut player, mut velocity, mut player_sprite) = player_query.single_mut();
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
     for input in inputs {
@@ -110,13 +110,17 @@ fn update_player(mut player_query: Query<(&mut Player, &mut Velocity, &mut Sprit
             GameInput::Left => {
                 // player starts off facing right so facing left is true
                 // facing right is false
-                if !player_sprite.flip_x { player_sprite.flip_x = true; }
+                if !player_sprite.flip_x {
+                    player_sprite.flip_x = true;
+                }
                 velocity.linvel += Vec3::X * -200.0
-            },
+            }
             GameInput::Right => {
-                if player_sprite.flip_x { player_sprite.flip_x = false; }
+                if player_sprite.flip_x {
+                    player_sprite.flip_x = false;
+                }
                 velocity.linvel += Vec3::X * 200.0
-            },
+            }
         }
     }
     velocity.linvel.y -= 100.0;
