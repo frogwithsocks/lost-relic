@@ -117,7 +117,7 @@ fn update_player(
         match input {
             GameInput::Jump => {
                 if player.on_ground {
-                    velocity.linvel += Vec3::Y * 2225f32;
+                    velocity.linvel += Vec3::Y * 2225.0;
                 }
             }
             GameInput::Left => {

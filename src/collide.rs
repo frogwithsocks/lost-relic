@@ -23,7 +23,7 @@ fn test_floor(mut commands: Commands) {
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(0f32, -BLOCK_SIZE * 3.0, 0f32),
+                translation: Vec3::new(0.0, -BLOCK_SIZE * 3.0, 0.0),
                 ..default()
             },
             ..default()
@@ -41,7 +41,7 @@ fn test_floor(mut commands: Commands) {
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(-BLOCK_SIZE * 3.0, BLOCK_SIZE * 2.0, 0f32),
+                translation: Vec3::new(-BLOCK_SIZE * 3.0, BLOCK_SIZE * 2.0, 0.0),
                 ..default()
             },
             ..default()
@@ -59,7 +59,7 @@ fn test_floor(mut commands: Commands) {
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(0f32, -BLOCK_SIZE * 2.0, 0f32),
+                translation: Vec3::new(0.0, -BLOCK_SIZE * 2.0, 0.0),
                 ..default()
             },
             ..default()
@@ -68,19 +68,6 @@ fn test_floor(mut commands: Commands) {
             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
             r#type: ColliderType::Solid,
         });
-}
-
-fn check_collision(
-    colliders: &Vec<(&Transform, &Collider)>,
-    size: Vec2,
-    position: Vec3,
-) -> Vec<Collision> {
-    colliders
-        .iter()
-        .filter_map(|(transform, collider)| {
-            collide(position, size, transform.translation, collider.size)
-        })
-        .collect()
 }
 
 pub enum PlayerEvent {
@@ -160,33 +147,33 @@ fn push(
 ) {
     let push = match collision {
         Collision::Left => Vec2::new(
-            (b_pos.x + b_size.x / 2f32) - (a_pos.x - a_size.x / 2f32),
-            0f32,
+            (b_pos.x + b_size.x / 2.0) - (a_pos.x - a_size.x / 2.0),
+            0.0,
         ),
         Collision::Right => Vec2::new(
-            (b_pos.x - b_size.x / 2f32) - (a_pos.x + a_size.x / 2f32),
-            0f32,
+            (b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0),
+            0.0,
         ),
         Collision::Top => Vec2::new(
-            0f32,
-            (b_pos.y - b_size.y / 2f32) - (a_pos.y + a_size.y / 2f32),
+            0.0,
+            (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0),
         ),
         Collision::Bottom => Vec2::new(
-            0f32,
-            (b_pos.y + b_size.y / 2f32) - (a_pos.y - a_size.y / 2f32),
+            0.0,
+            (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0),
         ),
         Collision::Inside => Vec2::ZERO,
     };
-    a_transform.translation += push.extend(0f32);
+    a_transform.translation += push.extend(0.0);
 }
 
 fn zero_velocity(collision: &Collision, velocity: &mut Velocity) {
     match collision {
         Collision::Left | Collision::Right => {
-            velocity.linvel.x = 0f32;
+            velocity.linvel.x = 0.0;
         }
         Collision::Top | Collision::Bottom => {
-            velocity.linvel.y = 0f32;
+            velocity.linvel.y = 0.0;
         }
         Collision::Inside => {
             velocity.linvel = Vec3::ZERO;
