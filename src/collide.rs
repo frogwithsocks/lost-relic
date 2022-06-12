@@ -10,7 +10,7 @@ pub struct CollidePlugin;
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
         app
-        .add_system(check_collisions)
+        .add_system(check_collisions.after("velocity"))
         .add_startup_system(test_floor);
     }
 }
@@ -74,6 +74,7 @@ fn check_collisions(
     let (mut player_velocity, mut player_transform, player_sprite) = player_query.single_mut();
     for (collider_entity, transform, collider) in collider_query.iter() {
         if let Some(collision) = collide(transform.translation, collider.size, player_transform.translation, player_sprite.custom_size.unwrap()) {
+            println!("{:?}", collision);
             let pos = player_transform.translation;
             match collider.r#type {
                 ColliderType::Solid => {

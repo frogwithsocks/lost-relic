@@ -10,9 +10,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
-            .add_system(player_inputs)
-            .add_system(update_player)
-            .add_system(update_latency);
+            .add_system(player_inputs.label("player"))
+            .add_system(update_player.label("player"))
+            .add_system(update_latency.label("player"));
     }
 }
 
