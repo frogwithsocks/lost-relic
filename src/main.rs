@@ -1,16 +1,16 @@
+use animation::AnimationPlugin;
 use bevy::prelude::*;
 use collide::{CollidePlugin, PlayerEvent};
+use map::MapPlugin;
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
-use map::MapPlugin;
-use animation::AnimationPlugin;
 
+mod animation;
 mod collide;
+mod map;
 mod player;
 mod triggers;
 mod velocity;
-mod map;
-mod animation;
 
 fn main() {
     App::new()

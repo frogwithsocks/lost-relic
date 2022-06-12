@@ -14,7 +14,7 @@ impl Plugin for CollidePlugin {
     }
 }
 
-fn test_floor(mut commands: Commands) {
+fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn_bundle(SpriteBundle {
             sprite: Sprite {
@@ -53,8 +53,8 @@ fn test_floor(mut commands: Commands) {
 
     commands
         .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("floor_tile.png"),
             sprite: Sprite {
-                color: Color::BLUE,
                 custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                 ..default()
             },
@@ -90,12 +90,21 @@ pub struct Collider {
 }
 
 fn check_collisions(
-    mut commands: Commands,
     mut events: EventWriter<PlayerEvent>,
-    mut player_query: Query<(&mut Velocity, &mut Transform, Option<&Sprite>, Option<&TextureAtlasSprite>, &mut Player), With<Player>>,
+    mut player_query: Query<
+        (
+            &mut Velocity,
+            &mut Transform,
+            Option<&Sprite>,
+            Option<&TextureAtlasSprite>,
+            &mut Player,
+        ),
+        With<Player>,
+    >,
     collider_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
 ) {
-    let (mut player_velocity, mut player_transform, maybe_sprite, maybe_atlas_sprite, mut player) = player_query.single_mut();
+    let (mut player_velocity, mut player_transform, maybe_sprite, maybe_atlas_sprite, mut player) =
+        player_query.single_mut();
     let mut player_size: Option<Vec2> = None;
     player_size = maybe_sprite.map(|s| s.custom_size.unwrap());
     player_size = maybe_atlas_sprite.map(|s| s.custom_size.unwrap());
@@ -125,13 +134,13 @@ fn check_collisions(
                         collider.size,
                     );
                     zero_velocity(&collision, &mut player_velocity);
-                },
+                }
                 ColliderType::Sensor => {
                     events.send(PlayerEvent::Button);
-                },
+                }
                 ColliderType::Death => {
                     events.send(PlayerEvent::Death);
-                },
+                }
             }
         }
     }
@@ -146,22 +155,12 @@ fn push(
     b_size: Vec2,
 ) {
     let push = match collision {
-        Collision::Left => Vec2::new(
-            (b_pos.x + b_size.x / 2.0) - (a_pos.x - a_size.x / 2.0),
-            0.0,
-        ),
-        Collision::Right => Vec2::new(
-            (b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0),
-            0.0,
-        ),
-        Collision::Top => Vec2::new(
-            0.0,
-            (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0),
-        ),
-        Collision::Bottom => Vec2::new(
-            0.0,
-            (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0),
-        ),
+        Collision::Left => Vec2::new((b_pos.x + b_size.x / 2.0) - (a_pos.x - a_size.x / 2.0), 0.0),
+        Collision::Right => Vec2::new((b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0), 0.0),
+        Collision::Top => Vec2::new(0.0, (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0)),
+        Collision::Bottom => {
+            Vec2::new(0.0, (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0))
+        }
         Collision::Inside => Vec2::ZERO,
     };
     a_transform.translation += push.extend(0.0);

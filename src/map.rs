@@ -12,24 +12,24 @@ impl Plugin for MapPlugin {
 
 #[derive(Component)]
 pub struct CellTower {
-    pub offset: Vec3
+    pub offset: Vec3,
 }
 
 fn spawn_cell_tower(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
-    .spawn_bundle(SpriteBundle {
-        texture: asset_server.load("cell_tower.png"),
-        sprite: Sprite {
-            custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2.0)),
+        .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("cell_tower.png"),
+            sprite: Sprite {
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE * 2.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::ZERO,
+                ..default()
+            },
             ..default()
-        },
-        transform: Transform {
-            translation: Vec3::ZERO,
-            ..default()
-        },
-        ..default()
-    })
-    .insert(CellTower {
-        offset: Vec3::new(0.0, BLOCK_SIZE / 2.0, 0.0),
-    });
+        })
+        .insert(CellTower {
+            offset: Vec3::new(0.0, BLOCK_SIZE / 2.0, 0.0),
+        });
 }

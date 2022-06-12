@@ -18,7 +18,9 @@ fn update_velocity(mut query: Query<(&mut Velocity, &mut Transform)>, time: Res<
     for (mut velocity, mut transform) in query.iter_mut() {
         let drag = velocity.drag;
         transform.translation += velocity.linvel * time.delta_seconds();
-        velocity.linvel.x = velocity.linvel.x - (velocity.linvel.x * (drag.x * time.delta_seconds()));
-        velocity.linvel.y = velocity.linvel.y - (velocity.linvel.y * (drag.y * time.delta_seconds()));
+        velocity.linvel.x =
+            velocity.linvel.x - (velocity.linvel.x * (drag.x * time.delta_seconds()));
+        velocity.linvel.y =
+            velocity.linvel.y - (velocity.linvel.y * (drag.y * time.delta_seconds()));
     }
 }
