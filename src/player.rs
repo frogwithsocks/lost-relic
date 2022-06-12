@@ -1,4 +1,4 @@
-use crate::velocity::Velocity;
+use crate::{map::{BLOCK_SIZE, CellTower}, velocity::Velocity};
 
 use bevy::prelude::*;
 use std::collections::VecDeque;
@@ -14,25 +14,7 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-#[derive(Component)]
-struct CellTower;
 fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // TODO move to another function probably in map.rs
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("cell_tower.png"),
-            sprite: Sprite {
-                custom_size: Some(Vec2::new(100.0, 200.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::ZERO,
-                ..default()
-            },
-            ..default()
-        })
-        .insert(CellTower);
-
     commands
         .spawn_bundle(SpriteBundle {
             texture: asset_server.load("robot.png"),
@@ -106,7 +88,7 @@ fn update_player(
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
     for input in inputs {
         match input {
-            GameInput::Jump => velocity.linvel += Vec3::Y * 1000.0,
+            GameInput::Jump => velocity.linvel += Vec3::Y * BLOCK_SIZE,
             GameInput::Left => {
                 // player starts off facing right so facing left is true
                 // facing right is false
@@ -123,7 +105,7 @@ fn update_player(
             }
         }
     }
-    velocity.linvel.y -= 100.0;
+    velocity.linvel.y -= 10.0;
 }
 
 fn update_latency(

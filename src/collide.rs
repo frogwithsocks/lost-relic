@@ -65,6 +65,12 @@ fn check_collision(
         .collect()
 }
 
+pub enum PlayerEvent {
+    Death,
+    Button,
+    Door,
+}
+
 // TODO maybe sensors should contain a string which tells it which thing to switch on in the env
 enum ColliderType {
     Solid,
@@ -80,6 +86,7 @@ pub struct Collider {
 
 fn check_collisions(
     mut commands: Commands,
+    mut events: EventWriter<PlayerEvent>,
     mut player_query: Query<(&mut Velocity, &mut Transform, &Sprite), With<Player>>,
     collider_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
 ) {
@@ -91,7 +98,6 @@ fn check_collisions(
             player_transform.translation,
             player_sprite.custom_size.unwrap(),
         ) {
-            println!("{:?}", collision);
             let pos = player_transform.translation;
             match collider.r#type {
                 ColliderType::Solid => {
@@ -104,11 +110,13 @@ fn check_collisions(
                         collider.size,
                     );
                     zero_velocity(&collision, &mut player_velocity);
-                }
+                },
                 ColliderType::Sensor => {
-                    // Do stuff then return
-                }
-                ColliderType::Death => panic!("Player has died"),
+                    events.send(PlayerEvent::Button);
+                },
+                ColliderType::Death => {
+                    events.send(PlayerEvent::Death);
+                },
             }
         }
     }
