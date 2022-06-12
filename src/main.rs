@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
+use collide::CollidePlugin;
 
 mod collide;
 mod player;
@@ -13,6 +14,7 @@ fn main() {
         .insert_resource(Msaa { samples: 1 })
         .add_plugin(VelocityPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(CollidePlugin)
         .add_startup_system(setup)
         .run();
 }
