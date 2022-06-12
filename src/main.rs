@@ -1,18 +1,24 @@
 use bevy::prelude::*;
+use collide::{CollidePlugin, PlayerEvent};
 use player::PlayerPlugin;
 use velocity::VelocityPlugin;
+use map::MapPlugin;
 
 mod collide;
 mod player;
 mod triggers;
 mod velocity;
+mod map;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_event::<PlayerEvent>()
         .insert_resource(Msaa { samples: 1 })
         .add_plugin(VelocityPlugin)
         .add_plugin(PlayerPlugin)
+        .add_plugin(CollidePlugin)
+        .add_plugin(MapPlugin)
         .add_startup_system(setup)
         .run();
 }
