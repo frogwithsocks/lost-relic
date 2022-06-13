@@ -2,21 +2,21 @@
 use animation::AnimationPlugin;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::TilemapPlugin;
+use camera::CameraPlugin;
 use collide::{CollidePlugin, PlayerEvent};
 use map::MapPlugin;
 use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
 use velocity::VelocityPlugin;
-use camera::CameraPlugin;
 
 mod animation;
+mod camera;
 mod collide;
 mod map;
 mod player;
 mod tiled_loader;
 mod triggers;
 mod velocity;
-mod camera;
 
 fn main() {
     App::new()
