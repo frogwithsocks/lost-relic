@@ -10,7 +10,7 @@ use std::{collections::HashMap, io::BufReader};
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
 
-use crate::collide::{Collider, ColliderType};
+use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 
 #[derive(Bundle)]
@@ -306,9 +306,9 @@ pub fn process_loaded_tile_maps(
                                                 ),
                                                 collider: Collider {
                                                     size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                    r#type: match gid {
-                                                        14 | 16 | 17 => ColliderType::Sensor,
-                                                        _ => ColliderType::Solid,
+                                                    kind: match gid {
+                                                        14 | 16 | 17 => ColliderKind::Sensor,
+                                                        _ => ColliderKind::Solid,
                                                     },
                                                     on_ground: false,
                                                 },

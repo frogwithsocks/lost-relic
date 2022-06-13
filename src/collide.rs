@@ -14,113 +14,8 @@ pub struct CollidePlugin;
 
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(check_collisions.after("velocity"))
-            .add_startup_system(test_ceil);
+        app.add_system(check_collisions.after("velocity"));
     }
-}
-
-fn test_ceil(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, -BLOCK_SIZE * 3.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
-            kind: ColliderKind::Solid,
-            on_ground: false,
-        });
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(-BLOCK_SIZE * 3.0, BLOCK_SIZE * 2.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
-            kind: ColliderKind::Solid,
-            on_ground: false,
-        });
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("floor_tile.png"),
-            sprite: Sprite {
-                color: Color::BLUE,
-                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(0.0, -BLOCK_SIZE * 2.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-            kind: ColliderKind::Movable,
-            on_ground: false,
-        })
-        .insert(Velocity::default())
-        .insert(Gravity::default());
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::BLUE,
-                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(BLOCK_SIZE * 2.0, -BLOCK_SIZE * 2.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-            kind: ColliderKind::Movable,
-            on_ground: false,
-        })
-        .insert(Velocity::default())
-        .insert(Gravity::default());
-
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::BLUE,
-                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(BLOCK_SIZE * 3.0, -BLOCK_SIZE * 2.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-            kind: ColliderKind::Movable,
-            on_ground: false,
-        })
-        .insert(Velocity::default())
-        .insert(Gravity::default());
 }
 
 pub enum PlayerEvent {
@@ -248,7 +143,7 @@ fn push_force(collision: &Collision, a_pos: Vec3, a_size: Vec2, b_pos: Vec3, b_s
         Collision::Right => Vec2::new((b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0), 0.0),
         Collision::Top => Vec2::new(0.0, (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0)),
         Collision::Bottom => {
-            Vec2::new(0.0, (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0))
+            Vec2::new(0.0, (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0) + 1.0)
         }
         Collision::Inside => Vec2::ZERO,
     }
