@@ -1,7 +1,8 @@
 use crate::{
     animation::Animation,
+    collide::{Collider, ColliderType},
     map::{CellTower, BLOCK_SIZE},
-    velocity::Velocity,
+    velocity::{Gravity, Velocity},
 };
 
 use bevy::prelude::*;
@@ -40,10 +41,16 @@ fn spawn_player(
             ..default()
         })
         .insert(Player::default())
+        .insert(Collider {
+            r#type: ColliderType::Solid,
+            size: Vec2::new(22.0 / 32.0 * BLOCK_SIZE, BLOCK_SIZE),
+            on_ground: false,
+        })
         .insert(Velocity {
             drag: Vec3::new(20.0, 10.0, 0.0),
             ..default()
         })
+        .insert(Gravity::default())
         .insert(Animation {
             timer: Timer::from_seconds(0.2, true),
             running: false,
@@ -64,7 +71,6 @@ pub struct Player {
     // # of ticks before register TODO make it millisecionds,
     latency: usize,
     queue: VecDeque<Vec<GameInput>>,
-    pub on_ground: bool,
 }
 
 fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&mut Player>) {
@@ -105,19 +111,21 @@ fn print_player_inputs(player_query: Query<&Player>) {
 fn update_player(
     mut player_query: Query<(
         &mut Player,
+        &mut Collider,
         &mut Velocity,
         &mut TextureAtlasSprite,
         &mut Animation,
     )>,
 ) {
-    let (mut player, mut velocity, mut player_sprite, mut animation) = player_query.single_mut();
+    let (mut player, mut collider, mut velocity, mut player_sprite, mut animation) =
+        player_query.single_mut();
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
     animation.running = false;
     for input in inputs {
         match input {
             GameInput::Jump => {
-                if player.on_ground {
-                    velocity.linvel += Vec3::Y * 2225.0;
+                if collider.on_ground {
+                    velocity.linvel += Vec3::Y * 2300.0;
                 }
             }
             GameInput::Left => {
@@ -134,7 +142,6 @@ fn update_player(
             }
         }
     }
-    velocity.linvel.y -= 150.0;
 }
 
 fn update_latency(

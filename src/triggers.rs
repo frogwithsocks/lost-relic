@@ -1,3 +1,3 @@
 use std::collections::HashMap;
 
-struct TriggerRes(HashMap<String, bool>);
+pub struct TriggerRes(pub HashMap<u32, bool>);

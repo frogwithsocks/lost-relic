@@ -2,8 +2,13 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
+use std::collections::{HashMap, HashSet};
 
-use crate::{map::BLOCK_SIZE, player::Player, velocity::Velocity};
+use crate::{
+    map::BLOCK_SIZE,
+    player::Player,
+    velocity::{Gravity, Velocity},
+};
 
 pub struct CollidePlugin;
 
@@ -31,6 +36,7 @@ fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider {
             size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
             r#type: ColliderType::Solid,
+            on_ground: false,
         });
 
     commands
@@ -49,6 +55,7 @@ fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(Collider {
             size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
             r#type: ColliderType::Solid,
+            on_ground: false,
         });
 
     commands
@@ -66,30 +73,36 @@ fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(Collider {
             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-            r#type: ColliderType::Solid,
-        });
+            r#type: ColliderType::Movable,
+            on_ground: false,
+        })
+        .insert(Velocity::default())
+        .insert(Gravity::default());
 }
 
 pub enum PlayerEvent {
+    Solid(u32),
+    Sensor(u32),
     Death,
-    Button,
-    Door,
 }
 
 // TODO maybe sensors should contain a string which tells it which thing to switch on in the env
-enum ColliderType {
+#[derive(Debug)]
+pub enum ColliderType {
     Solid,
     Sensor,
+    Movable,
     Death,
 }
 
 #[derive(Component)]
 pub struct Collider {
-    size: Vec2,
-    r#type: ColliderType,
+    pub size: Vec2,
+    pub r#type: ColliderType,
+    pub on_ground: bool,
 }
 
-fn check_collisions(
+/*fn check_collisions(
     mut events: EventWriter<PlayerEvent>,
     mut player_query: Query<
         (
@@ -101,7 +114,7 @@ fn check_collisions(
         ),
         With<Player>,
     >,
-    collider_query: Query<(Entity, &Transform, &Collider), Without<Player>>,
+    mut collider_query: Query<(Entity, &mut Transform, &Collider), Without<Player>>,
 ) {
     let (mut player_velocity, mut player_transform, maybe_sprite, maybe_atlas_sprite, mut player) =
         player_query.single_mut();
@@ -110,11 +123,11 @@ fn check_collisions(
     player_size = maybe_atlas_sprite.map(|s| s.custom_size.unwrap());
 
     let player_size = player_size.expect("Entity must have Sprite.custom_size or TextureAltasSprite.custom_size in order to preform collisions");
-
+    let mut second_update: Vec<(Entity, Vec3)> = Vec::new();
     player.on_ground = false;
-    for (collider_entity, transform, collider) in collider_query.iter() {
+    for (collider_entity, collider_transform, collider) in collider_query.iter() {
         if let Some(collision) = collide(
-            transform.translation,
+            collider_transform.translation,
             collider.size,
             player_transform.translation,
             player_size,
@@ -125,36 +138,190 @@ fn check_collisions(
             let pos = player_transform.translation;
             match collider.r#type {
                 ColliderType::Solid => {
-                    push(
-                        &collision,
-                        &mut player_transform,
-                        pos,
-                        player_size,
-                        transform.translation,
-                        collider.size,
-                    );
+                    player_transform.translation += push_force(&collision, pos, player_size, collider_transform.translation, collider.size);
                     zero_velocity(&collision, &mut player_velocity);
+                    events.send(PlayerEvent::Solid(collider_entity.id()));
                 }
                 ColliderType::Sensor => {
-                    events.send(PlayerEvent::Button);
+                    events.send(PlayerEvent::Sensor(collider_entity.id()));
                 }
                 ColliderType::Death => {
                     events.send(PlayerEvent::Death);
                 }
+                ColliderType::Movable => {
+                    let pushed_pos = collider_transform.translation
+                        - push_force(
+                            &collision,
+                            pos,
+                            player_size,
+                            collider_transform.translation,
+                            collider.size,
+                        );
+                    if match collision {
+                        Collision::Left | Collision::Right => true,
+                        _ => false,
+                    } && !collider_query
+                        .iter()
+                        .filter(|(e, _, _)| e.id() != collider_entity.id())
+                        .any(|(_, other_transform, other_collider)| {
+                            collide(
+                                other_transform.translation,
+                                other_collider.size,
+                                pushed_pos,
+                                collider.size,
+                            )
+                            .is_some()
+                        })
+                    {
+                        second_update.push((collider_entity, pushed_pos));
+                    } else {
+                        player_transform.translation += push_force(
+                            &collision,
+                            pos,
+                            player_size,
+                            collider_transform.translation,
+                            collider.size,
+                        );
+                        zero_velocity(&collision, &mut player_velocity);
+                    }
+                }
             }
         }
     }
+
+    for (entity, new_pos) in second_update {
+        let mut collider_transform = collider_query
+            .get_component_mut::<Transform>(entity)
+            .unwrap();
+        collider_transform.translation = new_pos;
+    }
+}*/
+
+fn check_collisions(
+    mut events: EventWriter<PlayerEvent>,
+    mut collider_query: Query<(Entity, &mut Transform, Option<&mut Velocity>, &mut Collider)>,
+) {
+    println!("UPDATE");
+    let mut position_update: HashMap<Entity, Vec3> = HashMap::new();
+    let mut velocity_update: Vec<(Entity, Vec3)> = Vec::new();
+    let mut grounded_update: Vec<(Entity, bool)> = Vec::new();
+    for (entity, transform, velocity_opt, collider) in
+        collider_query.iter().filter(|(_, _, v, _)| v.is_some())
+    {
+        for (other_entity, other_transform, _, other_collider) in collider_query
+            .iter()
+            .filter(|(e, _, _, _)| e.id() != entity.id())
+        {
+            let other_pos = other_transform.translation;
+            let pos = transform.translation;
+            if let Some(collision) = collide(other_pos, other_collider.size, pos, collider.size) {
+                if matches!(collision, Collision::Bottom) {
+                    grounded_update.push((entity, true));
+                }
+                match other_collider.r#type {
+                    ColliderType::Solid => {
+                        println!("solid");
+                        let push = push_force(
+                            &collision,
+                            pos,
+                            collider.size,
+                            other_pos,
+                            other_collider.size,
+                        );
+                        if let Some(position) = position_update.get_mut(&entity) {
+                            *position += push;
+                        } else {
+                            position_update.insert(entity, pos + push);
+                        }
+                        if let Some(velocity) = velocity_opt {
+                            velocity_update.push((entity, zero_velocity(&collision, velocity)));
+                        }
+                        events.send(PlayerEvent::Solid(entity.id()));
+                    }
+                    ColliderType::Sensor => {
+                        events.send(PlayerEvent::Sensor(entity.id()));
+                    }
+                    ColliderType::Death => {
+                        events.send(PlayerEvent::Death);
+                    }
+                    ColliderType::Movable => {
+                        println!("movable");
+                        let push = push_force(
+                            &collision,
+                            pos,
+                            collider.size,
+                            other_pos,
+                            other_collider.size,
+                        );
+                        let pushed_pos = other_pos - push;
+                        if match collision {
+                            Collision::Left | Collision::Right => true,
+                            _ => false,
+                        } && !collider_query
+                            .iter()
+                            .filter(|(e, _, _, _)| e.id() != entity.id())
+                            .any(|(_, other_t, _, other_c)| {
+                                collide(
+                                    other_t.translation,
+                                    other_c.size,
+                                    pushed_pos,
+                                    collider.size,
+                                )
+                                .is_some()
+                            })
+                        {
+                            if let Some(position) = position_update.get_mut(&other_entity) {
+                                *position -= push;
+                            } else {
+                                position_update.insert(other_entity, pushed_pos);
+                            }
+                        } else {
+                            let push = push_force(
+                                &collision,
+                                pos,
+                                collider.size,
+                                other_pos,
+                                other_collider.size,
+                            );
+                            if let Some(position) = position_update.get_mut(&entity) {
+                                *position += push;
+                            } else {
+                                position_update.insert(entity, pos + push);
+                            }
+                            if let Some(velocity) = velocity_opt {
+                                velocity_update.push((entity, zero_velocity(&collision, velocity)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (entity, new_pos) in position_update {
+        collider_query
+            .get_component_mut::<Transform>(entity)
+            .unwrap()
+            .translation = new_pos;
+    }
+
+    for (entity, new_vel) in velocity_update {
+        collider_query
+            .get_component_mut::<Velocity>(entity)
+            .unwrap()
+            .linvel = new_vel;
+    }
+
+    for (entity, state) in grounded_update {
+        collider_query
+            .get_component_mut::<Collider>(entity)
+            .unwrap()
+            .on_ground = state;
+    }
 }
 
-fn push(
-    collision: &Collision,
-    a_transform: &mut Transform,
-    a_pos: Vec3,
-    a_size: Vec2,
-    b_pos: Vec3,
-    b_size: Vec2,
-) {
-    let push = match collision {
+fn push_force(collision: &Collision, a_pos: Vec3, a_size: Vec2, b_pos: Vec3, b_size: Vec2) -> Vec3 {
+    match collision {
         Collision::Left => Vec2::new((b_pos.x + b_size.x / 2.0) - (a_pos.x - a_size.x / 2.0), 0.0),
         Collision::Right => Vec2::new((b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0), 0.0),
         Collision::Top => Vec2::new(0.0, (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0)),
@@ -162,20 +329,15 @@ fn push(
             Vec2::new(0.0, (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0))
         }
         Collision::Inside => Vec2::ZERO,
-    };
-    a_transform.translation += push.extend(0.0);
+    }
+    .extend(0.0)
 }
 
-fn zero_velocity(collision: &Collision, velocity: &mut Velocity) {
+fn zero_velocity(collision: &Collision, velocity: &Velocity) -> Vec3 {
+    let linvel = velocity.linvel;
     match collision {
-        Collision::Left | Collision::Right => {
-            velocity.linvel.x = 0.0;
-        }
-        Collision::Top | Collision::Bottom => {
-            velocity.linvel.y = 0.0;
-        }
-        Collision::Inside => {
-            velocity.linvel = Vec3::ZERO;
-        }
+        Collision::Left | Collision::Right => Vec3::new(0.0, linvel.y, linvel.z),
+        Collision::Top | Collision::Bottom => Vec3::new(linvel.x, 0.0, linvel.z),
+        Collision::Inside => Vec3::ZERO,
     }
 }
