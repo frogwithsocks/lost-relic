@@ -70,7 +70,7 @@ fn check_collisions(
                 }
                 let other_pos = update_position.get_mut(&other_entity).unwrap();
                 let other_size = other_collider.size;
-                if let Some(collision) = collide(*other_pos, other_size, pos, size) {
+                if let Some(collision) = collide(*other_pos, other_size * 0.99, pos, size * 0.99) {
                     if matches!(collision, Collision::Bottom) {
                         update_grounded.insert(entity);
                     }
@@ -122,11 +122,11 @@ fn check_collisions(
                 .translation = position;
         }
 
-        for (entity, velocity) in update_velocity {
+        for (entity, linvel) in update_velocity {
             collider_query
                 .get_component_mut::<Velocity>(entity)
                 .unwrap()
-                .linvel = velocity;
+                .linvel = linvel;
         }
 
         update = again;

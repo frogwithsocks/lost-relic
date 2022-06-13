@@ -4,7 +4,7 @@ pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_gravity.label("gravity").after("player2"))
+        app.add_system(update_gravity.label("gravity").after("player"))
             .add_system(update_velocity.label("velocity").after("gravity"));
     }
 }
