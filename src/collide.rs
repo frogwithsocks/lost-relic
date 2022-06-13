@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}};
 
 use crate::{
     map::BLOCK_SIZE,
@@ -60,6 +60,7 @@ fn test_ceil(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(SpriteBundle {
+            texture: asset_server.load("floor_tile.png"),
             sprite: Sprite {
                 color: Color::BLUE,
                 custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
@@ -129,15 +130,16 @@ pub enum PlayerEvent {
 }
 
 // TODO maybe sensors should contain a string which tells it which thing to switch on in the env
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub enum ColliderKind {
+    #[default]
     Solid,
     Sensor,
     Movable,
     Death,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Default)]
 pub struct Collider {
     pub size: Vec2,
     pub kind: ColliderKind,

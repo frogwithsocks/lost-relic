@@ -4,10 +4,43 @@ use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::render::render_resource::TextureUsages;
 use bevy_ecs_tilemap::prelude::*;
+use tiled::PropertyValue;
 use std::{collections::HashMap, io::BufReader};
 
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
+
+use crate::collide::{Collider, ColliderType};
+use crate::map::{CellTower, BLOCK_SIZE};
+
+#[derive(Bundle)]
+pub struct CellTowerBundle {
+    cell_tower: CellTower,
+    transform: Transform,
+}
+
+#[derive(Bundle, Clone, Default)]
+pub struct CollidableTileBundle {
+    /// Tile component.
+    pub tile: Tile,
+    /// The position in the tilemap grid.
+    pub position: TilePos,
+    /// The parent chunk.
+    pub parent: TileParent,
+
+    pub collider: Collider,
+    pub transform: Transform,
+}
+
+impl TileBundleTrait for CollidableTileBundle {
+    fn get_tile_pos_mut(&mut self) -> &mut TilePos {
+        &mut self.position
+    }
+
+    fn get_tile_parent(&mut self) -> &mut TileParent {
+        &mut self.parent
+    }
+}
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -16,7 +49,7 @@ impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
-            .add_system(process_loaded_tile_maps)
+            .add_system(process_loaded_tile_maps.label("map_colliders"))
             .add_system(set_texture_filters_to_nearest);
     }
 }
@@ -148,7 +181,7 @@ pub fn process_loaded_tile_maps(
                     }
                     map.remove_layer(&mut commands, layer_id);
                 }
-
+                let mut first_gid = 1;
                 for (tileset_index, tileset) in tiled_map.map.tilesets().iter().enumerate() {
                     // Once materials have been created/added we need to then create the layers.
                     for (layer_index, layer) in tiled_map.map.layers().enumerate() {
@@ -189,15 +222,16 @@ pub fn process_loaded_tile_maps(
                             }
                             tiled::Orientation::Orthogonal => TilemapMeshType::Square,
                         };
-
-                        let layer_entity = LayerBuilder::<TileBundle>::new_batch(
+                        let mut debug_sprites: Vec<SpriteBundle> = vec![];
+                        let mut cell_towers: Vec<CellTowerBundle> = vec![];
+                        let layer_entity = LayerBuilder::<CollidableTileBundle>::new_batch(
                             &mut commands,
                             map_settings.clone(),
                             &mut meshes,
                             tiled_map.tilesets.get(&tileset_index).unwrap().clone_weak(),
                             0u16,
                             layer_index as u16,
-                            move |mut tile_pos| {
+                            |mut tile_pos| {
                                 if tile_pos.0 >= tiled_map.map.width
                                     || tile_pos.1 >= tiled_map.map.height
                                 {
@@ -211,23 +245,74 @@ pub fn process_loaded_tile_maps(
                                 let x = tile_pos.0 as i32;
                                 let y = tile_pos.1 as i32;
 
+
                                 match layer.layer_type() {
                                     tiled::LayerType::TileLayer(tile_layer) => {
                                         tile_layer.get_tile(x, y).and_then(|tile| {
                                             if tile.tileset_index() != tileset_index {
                                                 return None;
                                             }
+                                            
+                                            let gid = first_gid + tile.id();
+
+                                            println!("{} {} ({}, {})", tileset.name, gid, x, y);
+                                            match gid {
+                                                16 => cell_towers.push(CellTowerBundle {
+                                                    cell_tower: CellTower,
+                                                    transform: Transform::from_xyz(
+                                                        (BLOCK_SIZE * (x as f32 - 8.0))
+                                                            + (BLOCK_SIZE / 2.0),
+                                                        -(BLOCK_SIZE * (y as f32 - 7.0))
+                                                            + (BLOCK_SIZE / 2.0),
+                                                        1.0,
+                                                    ),
+                                                }),
+                                                _ => debug_sprites.push(SpriteBundle {
+                                                    transform: Transform::from_xyz(
+                                                        (BLOCK_SIZE * (x as f32 - 8.0))
+                                                            + (BLOCK_SIZE / 2.0),
+                                                        -(BLOCK_SIZE * (y as f32 - 7.0))
+                                                            + (BLOCK_SIZE / 2.0),
+                                                        1.0,
+                                                    ),
+                                                    sprite: Sprite {
+                                                        color: Color::WHITE,
+                                                        custom_size: Some(Vec2::new(
+                                                            BLOCK_SIZE / 2.0,
+                                                            BLOCK_SIZE / 2.0,
+                                                        )),
+                                                        ..default()
+                                                    },
+                                                    ..default()
+                                                }),
+                                            };
+
                                             let tile = Tile {
                                                 texture_index: tile.id() as u16,
                                                 flip_x: tile.flip_h,
                                                 flip_y: tile.flip_v,
                                                 flip_d: tile.flip_d,
-                                                ..Default::default()
+                                                ..default()
                                             };
 
-                                            Some(TileBundle {
+                                            Some(CollidableTileBundle {
                                                 tile,
-                                                ..Default::default()
+                                                transform: Transform::from_xyz(
+                                                    (BLOCK_SIZE * (x as f32 - 8.0))
+                                                        + (BLOCK_SIZE / 2.0),
+                                                    -(BLOCK_SIZE * (y as f32 - 7.0))
+                                                        + (BLOCK_SIZE / 2.0),
+                                                    0.0,
+                                                ),
+                                                collider: Collider {
+                                                    size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                                    r#type: match gid {
+                                                        14 | 16 | 17 => ColliderType::Sensor,
+                                                        _ => ColliderType::Solid,
+                                                    },
+                                                    on_ground: false,
+                                                },
+                                                ..default()
                                             })
                                         })
                                     }
@@ -242,7 +327,10 @@ pub fn process_loaded_tile_maps(
                             layer_index as f32,
                         ));
                         map.add_layer(&mut commands, layer_index as u16, layer_entity);
+                        // commands.spawn_batch(debug_sprites);
+                        commands.spawn_batch(cell_towers);
                     }
+                    first_gid += tileset.tilecount;
                 }
             }
         }

@@ -13,9 +13,9 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(spawn_player)
-            .add_system(player_inputs.label("player0"))
-            .add_system(update_player.label("player1").after("player0"))
-            .add_system(update_latency.label("player2").after("player1"));
+            .add_system(player_inputs.label("player"))
+            .add_system(update_player.label("player"))
+            .add_system(update_latency.label("player").after("map_colliders"));
     }
 }
 
@@ -147,14 +147,19 @@ fn update_player(
 
 fn update_latency(
     mut player_query: Query<(&Transform, &mut Player)>,
-    cell_tower_query: Query<(&Transform, &CellTower)>,
+    cell_tower_query: Query<&Transform, With<CellTower>>,
 ) {
     let (transform, mut player) = player_query.single_mut();
     let mut shortest = f32::MAX;
-    for (cell_tower_transform, cell_tower) in cell_tower_query.iter() {
-        shortest = (cell_tower_transform.translation + cell_tower.offset)
+    for cell_tower_transform in cell_tower_query.iter() {
+        shortest = cell_tower_transform
+            .translation
             .distance(transform.translation)
             .min(shortest);
+    }
+    if shortest == f32::MAX {
+        player.latency = 1000;
+        return
     }
     player.latency = (shortest / 50.0) as usize;
 }
