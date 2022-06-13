@@ -7,6 +7,7 @@ use map::MapPlugin;
 use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
 use velocity::VelocityPlugin;
+use camera::CameraPlugin;
 
 mod animation;
 mod collide;
@@ -15,6 +16,7 @@ mod player;
 mod tiled_loader;
 mod triggers;
 mod velocity;
+mod camera;
 
 fn main() {
     App::new()
@@ -28,6 +30,7 @@ fn main() {
         .add_plugin(CollidePlugin)
         .add_plugin(MapPlugin)
         .add_plugin(AnimationPlugin)
+        .add_plugin(CameraPlugin)
         .add_event::<PlayerEvent>()
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
