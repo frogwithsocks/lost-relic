@@ -1,8 +1,7 @@
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
-use bevy_ecs_tilemap::{Map, MapQuery, Tile, TilePos};
+use bevy::{prelude::*};
+use bevy_ecs_tilemap::{Map};
 
 use crate::{
-    collide::{Collider, ColliderKind},
     tiled_loader::{TiledMap, TiledMapBundle},
 };
 

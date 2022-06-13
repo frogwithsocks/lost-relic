@@ -102,7 +102,7 @@ fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&m
     player.queue[latency] = inputs;
 }
 
-fn print_player_inputs(player_query: Query<&Player>) {
+fn _print_player_inputs(player_query: Query<&Player>) {
     let player = player_query.single();
     println!("{:?}", player.queue);
 }
@@ -111,13 +111,13 @@ fn print_player_inputs(player_query: Query<&Player>) {
 fn update_player(
     mut player_query: Query<(
         &mut Player,
-        &mut Collider,
+        &Collider,
         &mut Velocity,
         &mut TextureAtlasSprite,
         &mut Animation,
     )>,
 ) {
-    let (mut player, mut collider, mut velocity, mut player_sprite, mut animation) =
+    let (mut player, collider, mut velocity, mut player_sprite, mut animation) =
         player_query.single_mut();
     let inputs: Vec<GameInput> = player.queue.pop_front().unwrap_or_default();
     animation.running = false;
