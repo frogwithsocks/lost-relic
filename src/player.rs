@@ -158,7 +158,7 @@ fn update_latency(
             .min(shortest);
     }
     if shortest == f32::MAX {
-        player.latency = 1000;
+        player.latency = 0;
         return
     }
     player.latency = (shortest / 50.0) as usize;

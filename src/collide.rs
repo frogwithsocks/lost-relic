@@ -41,13 +41,13 @@ fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(SpriteBundle {
-            texture: asset_server.load("floor_tile.png"),
+            texture: asset_server.load("box.png"),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::new(0.0, -BLOCK_SIZE * 2.0, 0.0),
+                translation: Vec3::new(0.0, -BLOCK_SIZE * 1.5, 5.0),
                 ..default()
             },
             ..default()
