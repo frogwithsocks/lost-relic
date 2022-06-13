@@ -201,7 +201,6 @@ fn check_collisions(
     mut events: EventWriter<PlayerEvent>,
     mut collider_query: Query<(Entity, &mut Transform, Option<&mut Velocity>, &mut Collider)>,
 ) {
-    println!("UPDATE");
     let mut position_update: HashMap<Entity, Vec3> = HashMap::new();
     let mut velocity_update: Vec<(Entity, Vec3)> = Vec::new();
     let mut grounded_update: Vec<Entity> = Vec::new();
