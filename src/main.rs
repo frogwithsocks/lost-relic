@@ -1,21 +1,27 @@
 use animation::AnimationPlugin;
 use bevy::prelude::*;
+use bevy_ecs_tilemap::TilemapPlugin;
 use collide::{CollidePlugin, PlayerEvent};
 use map::MapPlugin;
 use player::PlayerPlugin;
-use std::collections::HashMap;
+use tiled_loader::TiledMapPlugin;
 use velocity::VelocityPlugin;
 
 mod animation;
 mod collide;
 mod map;
 mod player;
+mod tiled_loader;
 mod triggers;
 mod velocity;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_event::<PlayerEvent>()
+        .add_plugin(TilemapPlugin)
+        .add_plugin(TiledMapPlugin)
+        .insert_resource(Msaa { samples: 1 })
         .add_plugin(VelocityPlugin)
         .add_plugin(PlayerPlugin)
         .add_plugin(CollidePlugin)

@@ -35,7 +35,7 @@ fn spawn_player(
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::ZERO,
+                translation: Vec3::Z * 100.0,
                 ..default()
             },
             ..default()
@@ -125,7 +125,7 @@ fn update_player(
         match input {
             GameInput::Jump => {
                 if collider.on_ground {
-                    velocity.linvel += Vec3::Y * 2300.0;
+                    velocity.linvel += Vec3::Y * 2000.0;
                 }
             }
             GameInput::Left => {
@@ -142,6 +142,7 @@ fn update_player(
             }
         }
     }
+    velocity.linvel.y -= 125.0;
 }
 
 fn update_latency(
