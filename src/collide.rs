@@ -2,13 +2,9 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
-use std::{collections::{HashMap, HashSet}};
+use std::collections::{HashMap, HashSet};
 
-use crate::{
-    map::BLOCK_SIZE,
-    player::Player,
-    velocity::{Gravity, Velocity},
-};
+use crate::{velocity::Velocity};
 
 pub struct CollidePlugin;
 
@@ -88,8 +84,12 @@ fn check_collisions(
                             }
                             again.insert(entity);
                         }
-                        ColliderKind::Sensor => {}
-                        ColliderKind::Death => {}
+                        ColliderKind::Sensor => {
+                            events.send(PlayerEvent::Sensor(other_entity.id()));
+                        }
+                        ColliderKind::Death => {
+                            events.send(PlayerEvent::Death);
+                        }
                         ColliderKind::Movable => {
                             let push = push_force(
                                 &opposite(&collision),
@@ -142,9 +142,10 @@ fn push_force(collision: &Collision, a_pos: Vec3, a_size: Vec2, b_pos: Vec3, b_s
         Collision::Left => Vec2::new((b_pos.x + b_size.x / 2.0) - (a_pos.x - a_size.x / 2.0), 0.0),
         Collision::Right => Vec2::new((b_pos.x - b_size.x / 2.0) - (a_pos.x + a_size.x / 2.0), 0.0),
         Collision::Top => Vec2::new(0.0, (b_pos.y - b_size.y / 2.0) - (a_pos.y + a_size.y / 2.0)),
-        Collision::Bottom => {
-            Vec2::new(0.0, (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0) + 2.0)
-        }
+        Collision::Bottom => Vec2::new(
+            0.0,
+            (b_pos.y + b_size.y / 2.0) - (a_pos.y - a_size.y / 2.0) + 2.0,
+        ),
         Collision::Inside => Vec2::ZERO,
     }
     .extend(0.0))
