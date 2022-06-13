@@ -9,9 +9,22 @@ impl Plugin for CameraPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct CameraAnchor;
+
 fn move_camera(
-    mut camera_query: Query<&mut Transform, (With<Frustum>, Without<Player>)>,
-    player_query: Query<&Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<Camera>, With<Frustum>, Without<Player>, Without<CameraAnchor>)>,
+    camera_anchors: Query<&Transform, With<CameraAnchor>>,
+    player_query: Query<&Transform, (With<Player>, Without<CameraAnchor>)>,
 ) {
-    camera_query.single_mut().translation = player_query.single().translation;
+    let player = player_query.single();
+    let mut closest = Vec3::new(f32::MAX, f32::MAX, f32::MAX);
+    for anchor in camera_anchors.iter() {
+        if anchor.translation.distance(player.translation) < closest.distance(player.translation) {
+            closest = anchor.translation;
+        }
+    }
+    println!("{:?}", camera_query.single_mut().translation);
+    closest.z = 999.9;
+    camera_query.single_mut().translation = closest;
 }
