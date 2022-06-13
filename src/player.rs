@@ -1,6 +1,6 @@
 use crate::{
     animation::Animation,
-    collide::{Collider, ColliderType},
+    collide::{Collider, ColliderKind},
     map::{CellTower, BLOCK_SIZE},
     velocity::{Gravity, Velocity},
 };
@@ -35,14 +35,14 @@ fn spawn_player(
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::Z * 100.0,
+                translation: Vec3::new(0.0, BLOCK_SIZE, 100.0),
                 ..default()
             },
             ..default()
         })
         .insert(Player::default())
         .insert(Collider {
-            r#type: ColliderType::Movable,
+            kind: ColliderKind::Movable,
             size: Vec2::new(22.0 / 32.0 * BLOCK_SIZE, BLOCK_SIZE),
             on_ground: false,
         })
@@ -125,7 +125,7 @@ fn update_player(
         match input {
             GameInput::Jump => {
                 if collider.on_ground {
-                    velocity.linvel += Vec3::Y * 2000.0;
+                    velocity.linvel += Vec3::Y * 2600.0;
                 }
             }
             GameInput::Left => {

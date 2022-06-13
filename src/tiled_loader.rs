@@ -10,7 +10,7 @@ use tiled::PropertyValue;
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
 
-use crate::collide::{Collider, ColliderType};
+use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 
 #[derive(Default)]
@@ -242,7 +242,7 @@ pub fn process_loaded_tile_maps(
                                                     _ => colliders.push((
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                            r#type: ColliderType::Solid,
+                                                            kind: ColliderKind::Solid,
                                                             on_ground: false,
                                                         },
                                                         Transform::from_xyz(
