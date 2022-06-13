@@ -41,25 +41,6 @@ fn test_floor(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     commands
         .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::new(-BLOCK_SIZE * 3.0, BLOCK_SIZE * 2.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE * 10.0, BLOCK_SIZE),
-            r#type: ColliderType::Solid,
-            on_ground: false,
-        });
-
-    commands
-        .spawn_bundle(SpriteBundle {
             texture: asset_server.load("floor_tile.png"),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
