@@ -42,7 +42,7 @@ fn spawn_player(
         })
         .insert(Player::default())
         .insert(Collider {
-            r#type: ColliderType::Solid,
+            r#type: ColliderType::Movable,
             size: Vec2::new(22.0 / 32.0 * BLOCK_SIZE, BLOCK_SIZE),
             on_ground: false,
         })

@@ -204,19 +204,96 @@ fn check_collisions(
 ) {
     let mut position_update: HashMap<Entity, Vec3> = HashMap::new();
     let mut velocity_update: Vec<(Entity, Vec3)> = Vec::new();
-    let mut grounded_update: Vec<(Entity, bool)> = Vec::new();
+    let mut grounded_update: Vec<Entity> = Vec::new();
     for (entity, transform, velocity_opt, collider) in
         collider_query.iter().filter(|(_, _, v, _)| v.is_some())
     {
-        for (other_entity, other_transform, _, other_collider) in collider_query
-            .iter()
-            .filter(|(e, _, _, _)| e.id() != entity.id())
+        for (other_entity, other_transform, _, other_collider) in
+            collider_query.iter().filter(|(e, _, _, c)| {
+                e.id() != entity.id() && matches!(c.r#type, ColliderType::Movable)
+            })
         {
             let other_pos = other_transform.translation;
             let pos = transform.translation;
             if let Some(collision) = collide(other_pos, other_collider.size, pos, collider.size) {
                 if matches!(collision, Collision::Bottom) {
-                    grounded_update.push((entity, true));
+                    grounded_update.push(entity);
+                }
+                let push = push_force(
+                    &collision,
+                    pos,
+                    collider.size,
+                    other_pos,
+                    other_collider.size,
+                );
+                let pushed_pos = other_pos - push;
+                if match collision {
+                    Collision::Left | Collision::Right => true,
+                    _ => false,
+                } && !collider_query
+                    .iter()
+                    .filter(|(e, _, _, _)| e.id() != entity.id())
+                    .any(|(_, other_t, _, other_c)| {
+                        collide(other_t.translation, other_c.size, pushed_pos, collider.size)
+                            .is_some()
+                    })
+                {
+                    position_update.insert(other_entity, pushed_pos);
+                } else {
+                    let push = push_force(
+                        &collision,
+                        pos,
+                        collider.size,
+                        other_pos,
+                        other_collider.size,
+                    );
+                    position_update.insert(entity, pos + push);
+                    if let Some(velocity) = velocity_opt {
+                        velocity_update.push((entity, zero_velocity(&collision, velocity)));
+                    }
+                }
+            }
+        }
+    }
+
+    for (entity, new_pos) in &position_update {
+        collider_query
+            .get_component_mut::<Transform>(*entity)
+            .unwrap()
+            .translation = *new_pos;
+    }
+
+    for (entity, new_vel) in &velocity_update {
+        collider_query
+            .get_component_mut::<Velocity>(*entity)
+            .unwrap()
+            .linvel = *new_vel;
+    }
+
+    for entity in &grounded_update {
+        collider_query
+            .get_component_mut::<Collider>(*entity)
+            .unwrap()
+            .on_ground = true;
+    }
+
+    position_update.clear();
+    velocity_update.clear();
+    grounded_update.clear();
+
+    for (entity, transform, velocity_opt, collider) in
+        collider_query.iter().filter(|(_, _, v, _)| v.is_some())
+    {
+        for (other_entity, other_transform, _, other_collider) in
+            collider_query.iter().filter(|(e, _, _, c)| {
+                e.id() != entity.id() && !matches!(c.r#type, ColliderType::Movable)
+            })
+        {
+            let other_pos = other_transform.translation;
+            let pos = transform.translation;
+            if let Some(collision) = collide(other_pos, other_collider.size, pos, collider.size) {
+                if matches!(collision, Collision::Bottom) {
+                    grounded_update.push(entity);
                 }
                 match other_collider.r#type {
                     ColliderType::Solid => {
@@ -243,54 +320,7 @@ fn check_collisions(
                     ColliderType::Death => {
                         events.send(PlayerEvent::Death);
                     }
-                    ColliderType::Movable => {
-                        let push = push_force(
-                            &collision,
-                            pos,
-                            collider.size,
-                            other_pos,
-                            other_collider.size,
-                        );
-                        let pushed_pos = other_pos - push;
-                        if match collision {
-                            Collision::Left | Collision::Right => true,
-                            _ => false,
-                        } && !collider_query
-                            .iter()
-                            .filter(|(e, _, _, _)| e.id() != entity.id())
-                            .any(|(_, other_t, _, other_c)| {
-                                collide(
-                                    other_t.translation,
-                                    other_c.size,
-                                    pushed_pos,
-                                    collider.size,
-                                )
-                                .is_some()
-                            })
-                        {
-                            if let Some(position) = position_update.get_mut(&other_entity) {
-                                *position -= push;
-                            } else {
-                                position_update.insert(other_entity, pushed_pos);
-                            }
-                        } else {
-                            let push = push_force(
-                                &collision,
-                                pos,
-                                collider.size,
-                                other_pos,
-                                other_collider.size,
-                            );
-                            if let Some(position) = position_update.get_mut(&entity) {
-                                *position += push;
-                            } else {
-                                position_update.insert(entity, pos + push);
-                            }
-                            if let Some(velocity) = velocity_opt {
-                                velocity_update.push((entity, zero_velocity(&collision, velocity)));
-                            }
-                        }
-                    }
+                    _ => unreachable!(),
                 }
             }
         }
@@ -310,11 +340,11 @@ fn check_collisions(
             .linvel = new_vel;
     }
 
-    for (entity, state) in grounded_update {
+    for entity in grounded_update {
         collider_query
             .get_component_mut::<Collider>(entity)
             .unwrap()
-            .on_ground = state;
+            .on_ground = true;
     }
 }
 
