@@ -5,7 +5,6 @@ use bevy::prelude::*;
 use bevy::render::render_resource::TextureUsages;
 use bevy_ecs_tilemap::prelude::*;
 use std::{collections::HashMap, io::BufReader};
-use tiled::PropertyValue;
 
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
@@ -228,7 +227,7 @@ pub fn process_loaded_tile_maps(
                                             // println!("{} {} ({}, {})", tileset.name, gid, x, y);
                                             if layer.name != "Background" {
                                                 match gid {
-                                                    16 => cell_towers.push((
+                                                    25 => cell_towers.push((
                                                         CellTower,
                                                         Transform::from_xyz(
                                                             (BLOCK_SIZE * (x as f32 - 8.0))
@@ -238,7 +237,7 @@ pub fn process_loaded_tile_maps(
                                                             1.0,
                                                         ),
                                                     )),
-                                                    14 | 17 => (),
+                                                    26 | 10 => (),
                                                     _ => colliders.push((
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
