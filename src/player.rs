@@ -34,7 +34,7 @@ fn spawn_player(
                 ..default()
             },
             transform: Transform {
-                translation: Vec3::ZERO,
+                translation: Vec3::Z * 100.0,
                 ..default()
             },
             ..default()
