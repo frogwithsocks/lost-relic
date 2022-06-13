@@ -91,7 +91,6 @@ pub fn process_loaded_tile_maps(
         match event {
             AssetEvent::Created { handle } => {
                 changed_maps.push(handle.clone());
-
             }
             AssetEvent::Modified { handle } => {
                 changed_maps.push(handle.clone());
@@ -195,11 +194,7 @@ pub fn process_loaded_tile_maps(
                             &mut commands,
                             map_settings.clone(),
                             &mut meshes,
-                            tiled_map
-                                .tilesets
-                                .get(&tileset_index)
-                                .unwrap()
-                                .clone_weak(),
+                            tiled_map.tilesets.get(&tileset_index).unwrap().clone_weak(),
                             0u16,
                             layer_index as u16,
                             move |mut tile_pos| {
