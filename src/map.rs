@@ -2,7 +2,7 @@ use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
 use bevy_ecs_tilemap::{Map, MapQuery, Tile, TilePos};
 
 use crate::{
-    collide::{Collider, ColliderType},
+    collide::{Collider, ColliderKind},
     tiled_loader::{TiledMap, TiledMapBundle},
 };
 
@@ -58,7 +58,6 @@ fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn add_colliders_to_map(mut commands: Commands, tile_query: Query<(Entity, &Tile, &TilePos)>) {
     for (tile_entity, tile, tile_pos) in tile_query.iter() {
-        println!("{:?}", tile_pos);
         commands
             .entity(tile_entity)
             .insert(Transform::from_xyz(
@@ -68,7 +67,7 @@ fn add_colliders_to_map(mut commands: Commands, tile_query: Query<(Entity, &Tile
             ))
             .insert(Collider {
                 size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                r#type: ColliderType::Solid,
+                kind: ColliderKind::Solid,
                 on_ground: false,
             });
     }

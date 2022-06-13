@@ -4,7 +4,7 @@ pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_gravity.label("gravity").after("player"))
+        app.add_system(update_gravity.label("gravity").after("player2"))
             .add_system(update_velocity.label("velocity").after("gravity"));
     }
 }
@@ -42,7 +42,8 @@ impl Default for Velocity {
 fn update_velocity(mut query: Query<(&mut Velocity, &mut Transform)>, time: Res<Time>) {
     for (mut velocity, mut transform) in query.iter_mut() {
         let drag = velocity.drag;
-        transform.translation += velocity.linvel * time.delta_seconds();
+        transform.translation =
+            (transform.translation + velocity.linvel * time.delta_seconds()).floor();
         velocity.linvel.x =
             velocity.linvel.x - (velocity.linvel.x * (drag.x * time.delta_seconds()));
         velocity.linvel.y =
