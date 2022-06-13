@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}};
 
 use crate::{
     map::BLOCK_SIZE,
@@ -87,15 +87,16 @@ pub enum PlayerEvent {
 }
 
 // TODO maybe sensors should contain a string which tells it which thing to switch on in the env
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub enum ColliderType {
+    #[default]
     Solid,
     Sensor,
     Movable,
     Death,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone, Default)]
 pub struct Collider {
     pub size: Vec2,
     pub r#type: ColliderType,
@@ -201,7 +202,6 @@ fn check_collisions(
     mut events: EventWriter<PlayerEvent>,
     mut collider_query: Query<(Entity, &mut Transform, Option<&mut Velocity>, &mut Collider)>,
 ) {
-    println!("UPDATE");
     let mut position_update: HashMap<Entity, Vec3> = HashMap::new();
     let mut velocity_update: Vec<(Entity, Vec3)> = Vec::new();
     let mut grounded_update: Vec<(Entity, bool)> = Vec::new();
@@ -220,7 +220,6 @@ fn check_collisions(
                 }
                 match other_collider.r#type {
                     ColliderType::Solid => {
-                        println!("solid");
                         let push = push_force(
                             &collision,
                             pos,
@@ -245,7 +244,6 @@ fn check_collisions(
                         events.send(PlayerEvent::Death);
                     }
                     ColliderType::Movable => {
-                        println!("movable");
                         let push = push_force(
                             &collision,
                             pos,

@@ -1,3 +1,4 @@
+#![feature(derive_default_enum)]
 use animation::AnimationPlugin;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::TilemapPlugin;

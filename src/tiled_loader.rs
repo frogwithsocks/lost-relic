@@ -9,6 +9,32 @@ use std::{collections::HashMap, io::BufReader};
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
 
+use crate::collide::{Collider, ColliderType};
+use crate::map::BLOCK_SIZE;
+
+#[derive(Bundle, Clone, Default)]
+pub struct CollidableTileBundle {
+    /// Tile component.
+    pub tile: Tile,
+    /// The position in the tilemap grid.
+    pub position: TilePos,
+    /// The parent chunk.
+    pub parent: TileParent,
+
+    pub collider: Collider,
+    pub transform: Transform,
+}
+
+impl TileBundleTrait for CollidableTileBundle {
+    fn get_tile_pos_mut(&mut self) -> &mut TilePos {
+        &mut self.position
+    }
+
+    fn get_tile_parent(&mut self) -> &mut TileParent {
+        &mut self.parent
+    }
+}
+
 #[derive(Default)]
 pub struct TiledMapPlugin;
 
@@ -85,13 +111,13 @@ pub fn process_loaded_tile_maps(
     new_maps: Query<&Handle<TiledMap>, Added<Handle<TiledMap>>>,
     layer_query: Query<&Layer>,
     chunk_query: Query<&Chunk>,
+    tile_query: Query<(Entity, &Tile, &TilePos)>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
         match event {
             AssetEvent::Created { handle } => {
                 changed_maps.push(handle.clone());
-
             }
             AssetEvent::Modified { handle } => {
                 changed_maps.push(handle.clone());
@@ -191,15 +217,11 @@ pub fn process_loaded_tile_maps(
                             tiled::Orientation::Orthogonal => TilemapMeshType::Square,
                         };
 
-                        let layer_entity = LayerBuilder::<TileBundle>::new_batch(
+                        let layer_entity = LayerBuilder::<CollidableTileBundle>::new_batch(
                             &mut commands,
                             map_settings.clone(),
                             &mut meshes,
-                            tiled_map
-                                .tilesets
-                                .get(&tileset_index)
-                                .unwrap()
-                                .clone_weak(),
+                            tiled_map.tilesets.get(&tileset_index).unwrap().clone_weak(),
                             0u16,
                             layer_index as u16,
                             move |mut tile_pos| {
@@ -227,12 +249,22 @@ pub fn process_loaded_tile_maps(
                                                 flip_x: tile.flip_h,
                                                 flip_y: tile.flip_v,
                                                 flip_d: tile.flip_d,
-                                                ..Default::default()
+                                                ..default()
                                             };
-
-                                            Some(TileBundle {
+                                            println!("({}, {})", x, y);
+                                            Some(CollidableTileBundle {
                                                 tile,
-                                                ..Default::default()
+                                                transform: Transform::from_xyz(
+                                                    (BLOCK_SIZE * (x as f32)) + (BLOCK_SIZE * -15.0),
+                                                    (BLOCK_SIZE * (y as f32)) + (BLOCK_SIZE * -7.0),
+                                                    0.0,
+                                                ),
+                                                collider: Collider {
+                                                    size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                                    r#type: ColliderType::Solid,
+                                                    on_ground: false,
+                                                },
+                                                ..default()
                                             })
                                         })
                                     }
@@ -252,6 +284,7 @@ pub fn process_loaded_tile_maps(
             }
         }
     }
+
 }
 
 pub fn set_texture_filters_to_nearest(
