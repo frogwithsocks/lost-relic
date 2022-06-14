@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::Map;
 
-use crate::tiled_loader::{TiledMap, TiledMapBundle};
+use crate::{
+    tiled_loader::{TiledMap, TiledMapBundle},
+};
 
 pub const BLOCK_SIZE: f32 = 96.0;
 
@@ -20,12 +22,11 @@ fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle: Handle<TiledMap> = asset_server.load("test.tmx");
 
     let map_entity = commands.spawn().id();
-
     commands.entity(map_entity).insert_bundle(TiledMapBundle {
         tiled_map: handle,
         map: Map::new(0u16, map_entity),
         transform: Transform {
-            translation: Vec3::new(BLOCK_SIZE * -8.0, BLOCK_SIZE * -8.0, 0.0),
+            translation: Vec3::new(0.0, 0.0, 0.0),
             scale: Vec3::new(3.0, 3.0, 1.0),
             ..default()
         },

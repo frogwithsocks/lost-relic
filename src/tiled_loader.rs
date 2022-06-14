@@ -9,8 +9,10 @@ use std::{collections::HashMap, io::BufReader};
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
 use bevy::reflect::TypeUuid;
 
+use crate::camera::CameraAnchor;
 use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
+use crate::player::{PlayerBundle, PlayerTexture};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -19,7 +21,7 @@ impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
-            .add_system(process_loaded_tile_maps.label("map_colliders"))
+            .add_system(process_loaded_tile_maps.label("map_update"))
             .add_system(set_texture_filters_to_nearest);
     }
 }
@@ -88,6 +90,7 @@ pub fn process_loaded_tile_maps(
     new_maps: Query<&Handle<TiledMap>, Added<Handle<TiledMap>>>,
     layer_query: Query<&Layer>,
     chunk_query: Query<&Chunk>,
+    player_texture_res: Res<PlayerTexture>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -192,8 +195,13 @@ pub fn process_loaded_tile_maps(
                             }
                             tiled::Orientation::Orthogonal => TilemapMeshType::Square,
                         };
+
+                        // let mut debug_boxes: Vec<SpriteBundle> = vec![];
                         let mut colliders: Vec<(Collider, Transform)> = vec![];
+                        let mut players: Vec<PlayerBundle> = vec![];
                         let mut cell_towers: Vec<(CellTower, Transform)> = vec![];
+                        let mut camera_anchors: Vec<(CameraAnchor, Transform)> = vec![];
+
                         let layer_entity = LayerBuilder::<TileBundle>::new_batch(
                             &mut commands,
                             map_settings.clone(),
@@ -211,7 +219,9 @@ pub fn process_loaded_tile_maps(
                                 if tiled_map.map.orientation == tiled::Orientation::Orthogonal {
                                     tile_pos.1 = (tiled_map.map.height - 1) as u32 - tile_pos.1;
                                 }
-
+                                let adjustment =
+                                    Vec3::new(0.0, tiled_map.map.height as f32 - 1.0, 0.0)
+                                        * BLOCK_SIZE;
                                 let x = tile_pos.0 as i32;
                                 let y = tile_pos.1 as i32;
 
@@ -229,13 +239,42 @@ pub fn process_loaded_tile_maps(
                                                 match gid {
                                                     25 => cell_towers.push((
                                                         CellTower,
-                                                        Transform::from_xyz(
-                                                            (BLOCK_SIZE * (x as f32 - 8.0))
-                                                                + (BLOCK_SIZE / 2.0),
-                                                            -(BLOCK_SIZE * (y as f32 - 7.0))
-                                                                + (BLOCK_SIZE / 2.0),
-                                                            1.0,
-                                                        ),
+                                                        Transform {
+                                                            translation: Vec3::new(
+                                                                (BLOCK_SIZE * (x as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                -(BLOCK_SIZE * (y as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                1.0,
+                                                            ) + adjustment,
+                                                            ..default()
+                                                        },
+                                                    )),
+                                                    27 => players.push(PlayerBundle::new(
+                                                        Transform {
+                                                            translation: Vec3::new(
+                                                                (BLOCK_SIZE * (x as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                -(BLOCK_SIZE * (y as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                1.0,
+                                                            ) + adjustment,
+                                                            ..default()
+                                                        },
+                                                        player_texture_res.0.clone_weak(),
+                                                    )),
+                                                    31 => camera_anchors.push((
+                                                        CameraAnchor,
+                                                        Transform {
+                                                            translation: Vec3::new(
+                                                                (BLOCK_SIZE * (x as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                -(BLOCK_SIZE * (y as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                1.0,
+                                                            ) + adjustment,
+                                                            ..default()
+                                                        },
                                                     )),
                                                     26 | 10 => (),
                                                     _ => colliders.push((
@@ -244,13 +283,16 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Solid,
                                                             on_ground: false,
                                                         },
-                                                        Transform::from_xyz(
-                                                            (BLOCK_SIZE * (x as f32 - 8.0))
-                                                                + (BLOCK_SIZE / 2.0),
-                                                            -(BLOCK_SIZE * (y as f32 - 7.0))
-                                                                + (BLOCK_SIZE / 2.0),
-                                                            0.0,
-                                                        ),
+                                                        Transform {
+                                                            translation: Vec3::new(
+                                                                (BLOCK_SIZE * (x as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                -(BLOCK_SIZE * (y as f32))
+                                                                    + (BLOCK_SIZE / 2.0),
+                                                                1.0,
+                                                            ) + adjustment,
+                                                            ..default()
+                                                        },
                                                     )),
                                                 };
                                             }
@@ -262,8 +304,10 @@ pub fn process_loaded_tile_maps(
                                                 flip_d: tile.flip_d,
                                                 ..default()
                                             };
-
-                                            Some(TileBundle { tile, ..default() })
+                                            match gid {
+                                                27 | 31 => None,
+                                                _ => Some(TileBundle { tile, ..default() }),
+                                            }
                                         })
                                     }
                                     _ => panic!("Unsupported layer type"),
@@ -277,8 +321,11 @@ pub fn process_loaded_tile_maps(
                             layer_index as f32,
                         ));
                         map.add_layer(&mut commands, layer_index as u16, layer_entity);
+                        // commands.spawn_batch(debug_boxes);
                         commands.spawn_batch(colliders);
                         commands.spawn_batch(cell_towers);
+                        commands.spawn_batch(players);
+                        commands.spawn_batch(camera_anchors)
                     }
                     first_gid += tileset.tilecount;
                 }
