@@ -47,7 +47,7 @@ fn spawn_player(
             on_ground: false,
         })
         .insert(Velocity {
-            drag: Vec3::new(20.0, 10.0, 0.0),
+            drag: Vec3::new(20.0, 5.0, 0.0),
             ..default()
         })
         .insert(Gravity::default())
@@ -125,7 +125,7 @@ fn update_player(
         match input {
             GameInput::Jump => {
                 if collider.on_ground {
-                    velocity.linvel += Vec3::Y * 2600.0;
+                    velocity.linvel += Vec3::Y * 2000.0;
                 }
             }
             GameInput::Left => {
@@ -142,7 +142,6 @@ fn update_player(
             }
         }
     }
-    velocity.linvel.y -= 125.0;
 }
 
 fn update_latency(
