@@ -1,16 +1,19 @@
 use bevy::{
+    asset::Assets,
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
+use bevy_ecs_tilemap::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-use crate::{velocity::Velocity};
+use crate::{map::BLOCK_SIZE, tiled_loader::TiledMap, velocity::Velocity};
 
 pub struct CollidePlugin;
 
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(check_collisions.after("velocity"));
+        app
+            .add_system(check_collisions);
     }
 }
 
@@ -40,7 +43,12 @@ pub struct Collider {
 fn check_collisions(
     mut events: EventWriter<PlayerEvent>,
     mut collider_query: Query<(Entity, &mut Transform, Option<&mut Velocity>, &mut Collider)>,
+    assets: Res<Assets<TiledMap>>,
+    map_query: Query<&Handle<TiledMap>>,
 ) {
+    let dimensions = assets.get(map_query.single()).map(|tm| Vec2::new(tm.map.width as f32, tm.map.height as f32)).unwrap_or(Vec2::splat(16.0)) * BLOCK_SIZE;
+    let mut partition = SpatialPartition::new(dimensions.x as usize, dimensions.y as usize);
+    partition.fill(&collider_query);
     let mut update: HashSet<Entity> = collider_query
         .iter()
         .filter(|(_, _, v, _)| v.is_some())
@@ -57,12 +65,19 @@ fn check_collisions(
             let collider = collider_query.get_component::<Collider>(entity).unwrap();
             let mut pos = transform.translation;
             let size = collider.size;
-            for (other_entity, other_transform, _, other_collider) in collider_query
-                .iter()
-                .filter(|(e, _, _, _)| e.id() != entity.id())
+            for other_entity in partition
+                .possibilities(pos.truncate(), size)
+                .into_iter()
+                .filter(|e| e.id() != entity.id())
             {
-                if !update_position.contains_key(&other_entity) {
-                    update_position.insert(other_entity, other_transform.translation);
+                let other_transform = collider_query
+                    .get_component::<Transform>(*other_entity)
+                    .unwrap();
+                let other_collider = collider_query
+                    .get_component::<Collider>(*other_entity)
+                    .unwrap();
+                if !update_position.contains_key(other_entity) {
+                    update_position.insert(*other_entity, other_transform.translation);
                 }
                 let other_pos = update_position.get_mut(&other_entity).unwrap();
                 let other_size = other_collider.size;
@@ -107,7 +122,7 @@ fn check_collisions(
                                         .insert(entity, zero_velocity(&collision, velocity.linvel));
                                 }
                             }
-                            again.insert(other_entity);
+                            again.insert(*other_entity);
                         }
                     }
                 }
@@ -134,6 +149,92 @@ fn check_collisions(
 
     for (entity, _, _, mut collider) in collider_query.iter_mut() {
         collider.on_ground = update_grounded.contains(&entity);
+    }
+}
+
+struct SpatialPartition {
+    adjust: Vec2,
+    width: usize,
+    height: usize,
+    partition: Vec<Vec<HashSet<Entity>>>,
+}
+
+impl SpatialPartition {
+    const CELL_SIZE: f32 = BLOCK_SIZE;
+    fn new(real_width: usize, real_height: usize) -> Self {
+        let width = (real_width as f32 / Self::CELL_SIZE) as usize * 2;
+        let height = (real_height as f32 / Self::CELL_SIZE) as usize * 2;
+        let adjust = Vec2::new(real_width as f32 / 2.0, real_height as f32 / 2.0);
+        let mut partition: Vec<Vec<HashSet<Entity>>> = Vec::with_capacity(width);
+        for i in 0..width {
+            partition.push(Vec::with_capacity(height));
+            for _ in 0..height {
+                partition[i].push(HashSet::new());
+            }
+        }
+
+        Self {
+            adjust,
+            width,
+            height,
+            partition,
+        }
+    }
+
+    fn fill(&mut self, entities: &Query<(Entity, &mut Transform, Option<&mut Velocity>, &mut Collider)>) {
+        for (entity, transform, _, collider) in entities.iter() {
+            let (a, b, c, d) = self.spatial_index(transform.translation.truncate(), collider.size);
+            self.partition[a.0][a.1].insert(entity);
+            self.partition[b.0][b.1].insert(entity);
+            self.partition[c.0][c.1].insert(entity);
+            self.partition[d.0][d.1].insert(entity);
+        }
+    }
+
+    fn clear(&mut self) {
+        for i in 0..self.width {
+            for j in 0..self.height {
+                self.partition[i][j].clear();
+            }
+        }
+    }
+
+    fn possibilities(&self, position: Vec2, size: Vec2) -> Vec<&Entity> {
+        let (a, b, c, d) = self.spatial_index(position, size);
+        self.partition[a.0][a.1]
+            .iter()
+            .chain(self.partition[b.0][b.1].iter())
+            .chain(self.partition[c.0][c.1].iter())
+            .chain(self.partition[d.0][d.1].iter())
+            .collect()
+    }
+
+    fn spatial_index(
+        &self,
+        position: Vec2,
+        size: Vec2,
+    ) -> (
+        (usize, usize),
+        (usize, usize),
+        (usize, usize),
+        (usize, usize),
+    ) {
+        let position = position + self.adjust;
+        let hx = Vec2::new(size.x / 2.0, 0.0);
+        let hy = Vec2::new(0.0, size.y / 2.0);
+        let (a, b, c, d) = (
+            ((position - size / 2.0) / Self::CELL_SIZE).floor(),
+            ((position + size / 2.0) / Self::CELL_SIZE).floor(),
+            ((position + hy - hx) / Self::CELL_SIZE).floor(),
+            ((position - hy + hx) / Self::CELL_SIZE).floor(),
+        );
+
+        (
+            (a.x as usize, a.y as usize),
+            (b.x as usize, b.y as usize),
+            (c.x as usize, c.y as usize),
+            (d.x as usize, d.y as usize),
+        )
     }
 }
 
