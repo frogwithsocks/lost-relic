@@ -5,7 +5,7 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(move_camera.after("player"));
+        //app.add_system(move_camera);
     }
 }
 
