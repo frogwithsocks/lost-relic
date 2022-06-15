@@ -9,11 +9,11 @@ pub struct Button {
 }
 
 impl Button {
-    fn is_pressed(&self) -> bool {
+    pub fn is_pressed(&self) -> bool {
         self.pressed
     }
 
-    fn toggle(&mut self) {
+    pub fn toggle(&mut self) {
         self.pressed = !self.pressed;
     }
 }

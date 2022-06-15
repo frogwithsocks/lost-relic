@@ -19,7 +19,7 @@ impl Plugin for MapPlugin {
 #[derive(Component)]
 pub struct CellTower;
 
-fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
     let handle: Handle<TiledMap> = asset_server.load("test.tmx");
 
     let map_entity = commands.spawn().id();
