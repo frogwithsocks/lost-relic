@@ -23,6 +23,20 @@
  <tileset firstgid="32" name="box" tilewidth="32" tileheight="32" tilecount="1" columns="1">
   <image source="box.png" width="32" height="32"/>
  </tileset>
+ <tileset firstgid="33" name="door" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="door.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="34" name="button" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="button.png" width="32" height="32"/>
+  <tile id="0">
+   <properties>
+    <property name="id" value="blue"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="35" name="spikes" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="spikes.png" width="32" height="32"/>
+ </tileset>
  <layer id="2" name="Background" width="16" height="16">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
@@ -78,7 +92,7 @@
 9,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 9,11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 9,11,0,0,0,0,0,0,25,0,0,0,0,0,0,0,
-9,11,0,0,27,0,0,0,26,0,0,0,0,0,1,2,
+9,11,0,0,27,0,34,33,26,0,0,0,0,35,1,2,
 9,12,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
 9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
 17,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18

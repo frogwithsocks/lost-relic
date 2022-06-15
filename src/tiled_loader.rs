@@ -212,7 +212,7 @@ pub fn process_loaded_tile_maps(
                         };
 
                         // let mut debug_boxes: Vec<SpriteBundle> = vec![];
-                        let mut colliders: Vec<Transform> = vec![];
+                        let mut colliders: Vec<(Collider, Transform)> = vec![];
                         let mut players: Vec<PlayerBundle> = vec![];
                         let mut cell_towers: Vec<Transform> = vec![];
                         let mut camera_anchors: Vec<Transform> = vec![];
@@ -270,7 +270,22 @@ pub fn process_loaded_tile_maps(
                                                     31 => camera_anchors.push(default_transform),
                                                     32 => boxes.push(default_transform),
                                                     26 | 10 => (),
-                                                    _ => colliders.push(default_transform),
+                                                    35 => colliders.push((
+                                                        Collider {
+                                                            size: Vec2::new(BLOCK_SIZE / 1.25, BLOCK_SIZE / 2.0),
+                                                            kind: ColliderKind::Death,
+                                                            on_ground: false,
+                                                        },
+                                                        default_transform,
+                                                    )),
+                                                    _ => colliders.push((
+                                                        Collider {
+                                                            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                                            kind: ColliderKind::Solid,
+                                                            on_ground: false,
+                                                        },
+                                                        default_transform,
+                                                    )),
                                                 };
                                             }
 
@@ -300,17 +315,8 @@ pub fn process_loaded_tile_maps(
                         map.add_layer(&mut commands, layer_index as u16, layer_entity);
                         // TODO you could loop over the bundles and just add them to make this a little prittier
                         // commands.spawn_batch(debug_boxes);
-                        commands.spawn_batch(colliders.into_iter().map(|v| {
-                            (
-                                WorldObject,
-                                Collider {
-                                    size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                    kind: ColliderKind::Solid,
-                                    on_ground: false,
-                                },
-                                v,
-                            )
-                        }));
+                        commands
+                            .spawn_batch(colliders.into_iter().map(|(v, w)| (WorldObject, v, w)));
                         commands.spawn_batch(
                             cell_towers.into_iter().map(|v| (WorldObject, CellTower, v)),
                         );

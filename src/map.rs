@@ -34,19 +34,4 @@ pub fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     });
 
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::CRIMSON,
-                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
-                ..default()
-            },
-            transform: Transform::from_xyz(8.0 * BLOCK_SIZE, 5.0 * BLOCK_SIZE, 2.0),
-            ..default()
-        })
-        .insert(Collider {
-            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-            kind: ColliderKind::Death,
-            ..default()
-        });
 }
