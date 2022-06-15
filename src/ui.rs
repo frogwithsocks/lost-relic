@@ -59,8 +59,6 @@ fn update_latency_text(
         }
     };
 
-    text.sections[0].value = ((latency.0.iter().sum::<i32>() as f32 / latency.0.len() as f32)
+    text.sections[0].value = format!("{:.1}ms", (latency.0.iter().sum::<i32>() as f32 / latency.0.len() as f32)
         * player.latency as f32)
-        .to_string()
-        + "ms"
 }

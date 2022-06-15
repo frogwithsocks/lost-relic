@@ -325,8 +325,8 @@ struct SpatialPartition {
 impl SpatialPartition {
     const CELL_SIZE: f32 = BLOCK_SIZE * 4.0;
     fn new(real_width: usize, real_height: usize) -> Self {
-        let width = (real_width as f32 / Self::CELL_SIZE) as usize + 2;
-        let height = (real_height as f32 / Self::CELL_SIZE) as usize + 2;
+        let width = (Self::align(real_width as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize + 4;
+        let height = (Self::align(real_height as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize + 4;
         let adjust = Vec3::new(real_width as f32 / 2.0, real_height as f32 / 2.0, 0.0);
         let mut partition = Vec::with_capacity(width);
         for i in 0..width {
@@ -340,6 +340,11 @@ impl SpatialPartition {
             adjust,
             partition,
         }
+    }
+
+    fn align(src: f32, alignment: f32) -> f32 {
+        let tmp = src + (alignment - 1.0);
+        tmp - tmp % alignment
     }
 
     // ---------
