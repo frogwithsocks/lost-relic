@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    collide::PlayerEvent,
+    collide::GameEvent,
     player::{Latency, Player},
 };
 
@@ -81,7 +81,7 @@ fn update_latency_text(
     mut text_query: Query<&mut Text, With<LatencyText>>,
     mut image_query: Query<&mut UiImage, With<LatencyImage>>,
     mut player_query: Query<&mut Player>,
-    mut events: EventWriter<PlayerEvent>,
+    mut events: EventWriter<GameEvent>,
 ) {
     let mut text = text_query.single_mut();
     let mut image = image_query.single_mut();
@@ -98,7 +98,7 @@ fn update_latency_text(
         0..=7 => image.0 = asset_server.load("wifi_3.png"),
         8..=24 => image.0 = asset_server.load("wifi_2.png"),
         25..=40 => image.0 = asset_server.load("wifi_1.png"),
-        _ => events.send(PlayerEvent::Death),
+        _ => events.send(GameEvent::Death),
     }
 
     text.sections[0].value = format!(

@@ -3,7 +3,7 @@ use animation::AnimationPlugin;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::TilemapPlugin;
 use camera::CameraPlugin;
-use collide::{CollidePlugin, PlayerEvent};
+use collide::{CollidePlugin, GameEvent};
 use map::MapPlugin;
 use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
@@ -19,11 +19,12 @@ mod tiled_loader;
 mod triggers;
 mod ui;
 mod velocity;
+mod events;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_event::<PlayerEvent>()
+        .add_event::<GameEvent>()
         .add_plugin(TilemapPlugin)
         .add_plugin(TiledMapPlugin)
         .add_plugin(VelocityPlugin)
@@ -33,7 +34,6 @@ fn main() {
         .add_plugin(AnimationPlugin)
         .add_plugin(CameraPlugin)
         .add_plugin(UiPlugin)
-        .add_event::<PlayerEvent>()
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
         .run();

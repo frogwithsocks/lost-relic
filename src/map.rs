@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
-    collide::{Collider, ColliderKind, PlayerEvent},
+    collide::{Collider, ColliderKind},
     tiled_loader::{TiledMap, TiledMapBundle},
 };
 
@@ -12,8 +12,7 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_map)
-            .add_system(death_update_map);
+        app.add_startup_system(spawn_map);
     }
 }
 
@@ -50,19 +49,4 @@ fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
             kind: ColliderKind::Death,
             ..default()
         });
-}
-
-fn death_update_map(
-    mut player_events: EventReader<PlayerEvent>,
-    mut commands: Commands,
-    mut map_query: MapQuery,
-) {
-    if player_events
-        .iter()
-        .filter(|e| **e == PlayerEvent::Death)
-        .count()
-        > 0
-    {
-        map_query.despawn(&mut commands, 0u16);
-    }
 }

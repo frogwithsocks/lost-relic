@@ -20,8 +20,7 @@ impl Plugin for CollidePlugin {
 }
 
 #[derive(PartialEq, Eq)]
-pub enum PlayerEvent {
-    Solid(u32),
+pub enum GameEvent {
     Sensor(u32),
     Death,
 }
@@ -76,7 +75,7 @@ impl From<usize> for Axis {
 }
 
 fn handle_collisions(
-    mut events: EventWriter<PlayerEvent>,
+    mut events: EventWriter<GameEvent>,
     mut colliders: Query<(Entity, &mut Transform, &mut Collider)>,
     mut velocity_query: Query<&mut Velocity>,
     time: Res<Time>,
@@ -182,11 +181,10 @@ fn handle_collisions(
                                     update_velocity.insert(other_entity);
                                 }
                                 ColliderKind::Death => {
-                                    events.send(PlayerEvent::Death);
-                                    panic!("death");
+                                    events.send(GameEvent::Death);
                                 }
                                 ColliderKind::Sensor => {
-                                    events.send(PlayerEvent::Sensor(other_entity.id()))
+                                    events.send(GameEvent::Sensor(other_entity.id()))
                                 }
                                 _ => {}
                             }
