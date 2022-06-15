@@ -15,58 +15,8 @@ pub struct CollidePlugin;
 
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(test_collisions)
-            .add_system(handle_collisions.after("gravity").after("player"));
+        app.add_system(handle_collisions);
     }
-}
-
-fn test_collisions(mut commands: Commands, assets_server: Res<AssetServer>) {
-    let blue_box = assets_server.load("box.png");
-    for layer in 0..1 {
-        for i in -6..-1 {
-            commands
-                .spawn_bundle(SpriteBundle {
-                    texture: blue_box.clone(),
-                    sprite: Sprite {
-                        custom_size: Some(Vec2::splat(BLOCK_SIZE)),
-                        ..default()
-                    },
-                    transform: Transform {
-                        translation: Vec3::new(i as f32, -1.0, 0.0)
-                            * BLOCK_SIZE,
-                        ..default()
-                    },
-                    ..default()
-                })
-                .insert(Collider {
-                    kind: ColliderKind::Solid,
-                    size: Vec2::splat(BLOCK_SIZE),
-                    on_ground: false,
-                });
-        }
-    }
-
-    commands
-    .spawn_bundle(SpriteBundle {
-        texture: blue_box.clone(),
-        sprite: Sprite {
-            custom_size: Some(Vec2::splat(BLOCK_SIZE)),
-            ..default()
-        },
-        transform: Transform {
-            translation: Vec3::new(0.0, 5.0, 0.0)
-                * BLOCK_SIZE,
-            ..default()
-        },
-        ..default()
-    })
-    .insert(Collider {
-        kind: ColliderKind::Movable,
-        size: Vec2::splat(BLOCK_SIZE),
-        on_ground: false,
-    })
-    .insert(Gravity::default())
-    .insert(Velocity::default());
 }
 
 pub enum PlayerEvent {
@@ -99,6 +49,7 @@ pub struct Collider {
 }
 
 fn handle_collisions(
+    mut events: EventWriter<PlayerEvent>,
     mut colliders: Query<(Entity, &mut Transform, &mut Collider)>,
     mut velocity_query: Query<&mut Velocity>,
     time: Res<Time>,
@@ -164,39 +115,41 @@ fn handle_collisions(
                 let other_size = other_collider.size;
                 let other_position = *positions.get(&other_entity).unwrap();
                 if let Some(collision) = collide(other_position, other_size, position, size) {
-                        if matches!(collision, Collision::Bottom) {
-                            grounded.insert(entity);
-                        } else {
-                            grounded.insert(other_entity);
-                        }
-                        match collision {
-                            Collision::Top | Collision::Bottom => {
-                                match other_collider.kind {
-                                ColliderKind::Solid => {
-                                    position += push_force(
-                                        &collision,
-                                        position,
-                                        size,
-                                        other_position,
-                                        other_size,
-                                    );
-                                    again.insert(entity);
-                                    update_velocity.insert(entity);
-                                }
-                                ColliderKind::Movable => {
-                                    let push = push_force(
-                                        &collision,
-                                        position,
-                                        size,
-                                        other_position,
-                                        other_size,
-                                    );
-                                    positions.insert(other_entity, other_position - push);
-                                    again.insert(other_entity);
-                                    update_velocity.insert(other_entity);
-                                }
-                                _ => {}
+                    if matches!(collision, Collision::Bottom) {
+                        grounded.insert(entity);
+                    } else {
+                        grounded.insert(other_entity);
+                    }
+                    match collision {
+                        Collision::Top | Collision::Bottom => match other_collider.kind {
+                            ColliderKind::Solid => {
+                                position += push_force(
+                                    &collision,
+                                    position,
+                                    size,
+                                    other_position,
+                                    other_size,
+                                );
+                                again.insert(entity);
+                                update_velocity.insert(entity);
                             }
+                            ColliderKind::Movable => {
+                                let push = push_force(
+                                    &collision,
+                                    position,
+                                    size,
+                                    other_position,
+                                    other_size,
+                                );
+                                positions.insert(other_entity, other_position - push);
+                                again.insert(other_entity);
+                                update_velocity.insert(other_entity);
+                            }
+                            ColliderKind::Death => {
+                                events.send(PlayerEvent::Death);
+                                panic!("death");
+                            }
+                            _ => {}
                         },
                         _ => continue,
                     }
@@ -226,7 +179,7 @@ fn handle_collisions(
     for (entity, transform, _) in colliders.iter() {
         let mut position = transform.translation;
         if let Ok(velocity) = velocity_query.get_component::<Velocity>(entity) {
-            position.x = (position.x + velocity.linvel.x * delta).floor();
+            position = (position + velocity.linvel * delta).floor();
         }
         positions.insert(entity, position);
     }
@@ -279,6 +232,10 @@ fn handle_collisions(
                                 again.insert(other_entity);
                                 update_velocity.insert(other_entity);
                             }
+                            ColliderKind::Death => {
+                                events.send(PlayerEvent::Death);
+                                panic!("death");
+                            }
                             _ => {}
                         },
                         _ => continue,
@@ -309,8 +266,8 @@ fn handle_collisions(
         if let Ok(mut velocity) = velocity_query.get_component_mut::<Velocity>(entity) {
             let drag = velocity.drag;
             transform.translation = (transform.translation + velocity.linvel * delta).floor();
-            velocity.linvel.x = velocity.linvel.x - (velocity.linvel.x * (drag.x * delta));
-            velocity.linvel.y = velocity.linvel.y - (velocity.linvel.y * (drag.y * delta));
+            velocity.linvel.x -= velocity.linvel.x * drag.x * delta;
+            velocity.linvel.y -= velocity.linvel.y * drag.y * delta;
 
             collider.on_ground = grounded.contains(&entity);
         }
@@ -325,8 +282,10 @@ struct SpatialPartition {
 impl SpatialPartition {
     const CELL_SIZE: f32 = BLOCK_SIZE * 4.0;
     fn new(real_width: usize, real_height: usize) -> Self {
-        let width = (Self::align(real_width as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize + 4;
-        let height = (Self::align(real_height as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize + 4;
+        let width =
+            (Self::align(real_width as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize * 2;
+        let height =
+            (Self::align(real_height as f32, Self::CELL_SIZE) / Self::CELL_SIZE) as usize * 2;
         let adjust = Vec3::new(real_width as f32 / 2.0, real_height as f32 / 2.0, 0.0);
         let mut partition = Vec::with_capacity(width);
         for i in 0..width {
@@ -336,10 +295,7 @@ impl SpatialPartition {
             }
         }
 
-        Self {
-            adjust,
-            partition,
-        }
+        Self { adjust, partition }
     }
 
     fn align(src: f32, alignment: f32) -> f32 {
@@ -369,6 +325,7 @@ impl SpatialPartition {
         }
     }
 
+    // TODO: ignore indices outside of bounds?
     fn possibilities(&self, position: Vec3, size: Vec2) -> Vec<&(Entity, Vec3, Collider)> {
         let (a, b, c, d) = self.spatial_index(position, size);
         self.partition[a.0][a.1]

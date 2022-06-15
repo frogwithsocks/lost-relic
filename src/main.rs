@@ -7,8 +7,8 @@ use collide::{CollidePlugin, PlayerEvent};
 use map::MapPlugin;
 use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
-use velocity::VelocityPlugin;
 use ui::UiPlugin;
+use velocity::VelocityPlugin;
 
 mod animation;
 mod camera;
@@ -17,8 +17,8 @@ mod map;
 mod player;
 mod tiled_loader;
 mod triggers;
-mod velocity;
 mod ui;
+mod velocity;
 
 fn main() {
     App::new()

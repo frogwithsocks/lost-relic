@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-
 pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {

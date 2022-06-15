@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::Map;
 
-use crate::{
-    tiled_loader::{TiledMap, TiledMapBundle},
-};
+use crate::tiled_loader::{TiledMap, TiledMapBundle};
 
 pub const BLOCK_SIZE: f32 = 96.0;
 

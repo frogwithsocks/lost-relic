@@ -53,12 +53,14 @@ fn update_latency_text(
     let mut text = text_query.single_mut();
     let player = match player_query.get_single_mut() {
         Ok(p) => p,
-        Err(e) => {
+        Err(_e) => {
             text.sections[0].value = "NaNms".to_string();
             return;
         }
     };
 
-    text.sections[0].value = format!("{:.1}ms", (latency.0.iter().sum::<i32>() as f32 / latency.0.len() as f32)
-        * player.latency as f32)
+    text.sections[0].value = format!(
+        "{:.1}ms",
+        (latency.0.iter().sum::<i32>() as f32 / latency.0.len() as f32) * player.latency as f32
+    )
 }

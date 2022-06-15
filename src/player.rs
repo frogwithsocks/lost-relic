@@ -97,10 +97,7 @@ pub struct Player {
     queue: VecDeque<Vec<GameInput>>,
 }
 
-fn player_inputs(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<&mut Player>,
-) {
+fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&mut Player>) {
     for mut player in player_query.iter_mut() {
         let latency = player.latency;
 
@@ -180,9 +177,10 @@ fn update_latency(
     cell_tower_query: Query<&Transform, With<CellTower>>,
     mut latency_counter: ResMut<Latency>,
     time: Res<Time>,
-
 ) {
-    latency_counter.0.push_back((time.delta_seconds() * 1000.0).floor() as i32);
+    latency_counter
+        .0
+        .push_back((time.delta_seconds() * 1000.0).floor() as i32);
     while latency_counter.0.len() > 10 {
         latency_counter.0.pop_front();
     }
