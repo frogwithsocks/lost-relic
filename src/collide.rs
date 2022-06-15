@@ -19,6 +19,7 @@ impl Plugin for CollidePlugin {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum PlayerEvent {
     Solid(u32),
     Sensor(u32),
