@@ -58,8 +58,7 @@ impl From<&Collision> for Axis {
     fn from(collision: &Collision) -> Self {
         match collision {
             Collision::Right | Collision::Left => Axis::X,
-            Collision::Top | Collision::Bottom => Axis::Y,
-            _ => panic!("impossible axis"),
+            Collision::Top | Collision::Bottom | Collision::Inside => Axis::Y,
         }
     }
 }

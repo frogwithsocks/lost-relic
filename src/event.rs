@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::triggers::{ButtonRes, DoorRes, Button};
+use crate::trigger::{ButtonRes, DoorRes, Button};
 use crate::collide::{GameEvent};
 use crate::tiled_loader::WorldObject;
 use crate::map::spawn_map;
