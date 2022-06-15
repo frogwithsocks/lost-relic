@@ -1,9 +1,7 @@
 use std::collections::HashMap;
-use bevy::prelude::*;
-use crate::collide::GameEvent;
 
-pub struct DoorRes(HashMap<String, usize>);
-pub struct ButtonRes(HashMap<u32, Button>);
+pub struct DoorRes(pub HashMap<String, usize>);
+pub struct ButtonRes(pub HashMap<u32, Button>);
 
 pub struct Button {
     pressed: bool,

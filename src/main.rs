@@ -1,4 +1,6 @@
 #![feature(derive_default_enum)]
+use std::collections::HashMap;
+
 use animation::AnimationPlugin;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::TilemapPlugin;
@@ -9,6 +11,8 @@ use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
 use ui::UiPlugin;
 use velocity::VelocityPlugin;
+use events::EventPlugin;
+use triggers::{ButtonRes, DoorRes};
 
 mod animation;
 mod camera;
@@ -34,6 +38,9 @@ fn main() {
         .add_plugin(AnimationPlugin)
         .add_plugin(CameraPlugin)
         .add_plugin(UiPlugin)
+        .add_plugin(EventPlugin)
+        .insert_resource(ButtonRes(HashMap::new()))
+        .insert_resource(DoorRes(HashMap::new()))
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
         .run();
