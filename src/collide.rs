@@ -149,10 +149,12 @@ fn handle_collisions(
                     let other_size = other_collider.size;
                     let other_position = *positions.get(&other_entity).unwrap();
                     if let Some(collision) = collide(other_position, other_size, position, size) {
-                        if matches!(collision, Collision::Bottom) {
-                            grounded.insert(entity);
-                        } else {
-                            grounded.insert(other_entity);
+                        if matches!(axis, Axis::Y) {
+                            if matches!(collision, Collision::Bottom) {
+                                grounded.insert(entity);
+                            } else {
+                                grounded.insert(other_entity);
+                            }
                         }
                         if Axis::from(&collision) == axis {
                             match other_collider.kind {
