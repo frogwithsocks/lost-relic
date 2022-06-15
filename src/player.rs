@@ -38,7 +38,6 @@ pub struct PlayerBundle {
 
 impl PlayerBundle {
     pub fn new(transform: Transform, texture: Handle<TextureAtlas>) -> Self {
-        println!("summoned: {:?}", texture);
         Self {
             sprite_sheet: SpriteSheetBundle {
                 texture_atlas: texture.clone(),
