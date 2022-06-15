@@ -2,7 +2,7 @@ use crate::{
     animation::Animation,
     collide::{Collider, ColliderKind},
     map::{CellTower, BLOCK_SIZE},
-    velocity::{Gravity, Velocity},
+    velocity::{Gravity, Velocity}, tiled_loader::WorldObject,
 };
 
 use bevy::prelude::*;
@@ -34,6 +34,7 @@ pub struct PlayerBundle {
     velocity: Velocity,
     gravity: Gravity,
     animation: Animation,
+    world_object: WorldObject,
 }
 
 impl PlayerBundle {
@@ -63,6 +64,7 @@ impl PlayerBundle {
                 timer: Timer::from_seconds(0.2, true),
                 running: false,
             },
+            world_object: WorldObject,
         }
     }
 }

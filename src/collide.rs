@@ -239,7 +239,7 @@ fn handle_collisions(
                             }
                             ColliderKind::Death => {
                                 events.send(PlayerEvent::Death);
-                                panic!("death");
+                                // panic!("death");
                             }
                             _ => {}
                         },
