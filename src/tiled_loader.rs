@@ -336,7 +336,10 @@ pub fn process_loaded_tile_maps(
                                 on_ground: false,
                             },
                             gravity: Gravity::default(),
-                            velocity: Velocity::default(),
+                            velocity: Velocity {
+                                drag: Vec3::splat(10.0),
+                                ..default()
+                            },
                             world_object: WorldObject,
                         }));
                     }
