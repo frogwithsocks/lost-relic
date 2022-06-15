@@ -11,8 +11,8 @@ use player::PlayerPlugin;
 use tiled_loader::TiledMapPlugin;
 use ui::UiPlugin;
 use velocity::VelocityPlugin;
-use events::EventPlugin;
-use triggers::{ButtonRes, DoorRes};
+use event::EventPlugin;
+use trigger::{ButtonRes, DoorRes};
 
 mod animation;
 mod camera;
@@ -20,10 +20,10 @@ mod collide;
 mod map;
 mod player;
 mod tiled_loader;
-mod triggers;
+mod trigger;
 mod ui;
 mod velocity;
-mod events;
+mod event;
 
 fn main() {
     App::new()
