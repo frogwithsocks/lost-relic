@@ -27,6 +27,9 @@ impl Plugin for TiledMapPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct WorldObject;
+
 #[derive(Bundle)]
 pub struct BoxBundle {
     #[bundle]
@@ -34,6 +37,7 @@ pub struct BoxBundle {
     collider: Collider,
     velocity: Velocity,
     gravity: Gravity,
+    world_object: WorldObject,
 }
 
 #[derive(TypeUuid)]
@@ -208,11 +212,11 @@ pub fn process_loaded_tile_maps(
                         };
 
                         // let mut debug_boxes: Vec<SpriteBundle> = vec![];
-                        let mut colliders: Vec<(Collider, Transform)> = vec![];
+                        let mut colliders: Vec<Transform> = vec![];
                         let mut players: Vec<PlayerBundle> = vec![];
-                        let mut cell_towers: Vec<(CellTower, Transform)> = vec![];
-                        let mut camera_anchors: Vec<(CameraAnchor, Transform)> = vec![];
-                        let mut boxes: Vec<BoxBundle> = vec![];
+                        let mut cell_towers: Vec<Transform> = vec![];
+                        let mut camera_anchors: Vec<Transform> = vec![];
+                        let mut boxes: Vec<Transform> = vec![];
 
                         let layer_entity = LayerBuilder::<TileBundle>::new_batch(
                             &mut commands,
@@ -258,47 +262,15 @@ pub fn process_loaded_tile_maps(
                                             // println!("{} {} ({}, {})", tileset.name, gid, x, y);
                                             if layer.name != "Background" {
                                                 match gid {
-                                                    25 => cell_towers.push((
-                                                        CellTower,
-                                                        default_transform.clone(),
-                                                    )),
+                                                    25 => cell_towers.push(default_transform),
                                                     27 => players.push(PlayerBundle::new(
-                                                        default_transform.clone(),
+                                                        default_transform,
                                                         player_texture_res.0.clone_weak(),
                                                     )),
-                                                    31 => camera_anchors.push((
-                                                        CameraAnchor,
-                                                        default_transform.clone(),
-                                                    )),
-                                                    32 => boxes.push(BoxBundle {
-                                                        sprite_bundle: SpriteBundle {
-                                                            texture: asset_server.load("box.png"),
-                                                            transform: default_transform.clone(),
-                                                            sprite: Sprite {
-                                                                custom_size: Some(Vec2::new(
-                                                                    BLOCK_SIZE, BLOCK_SIZE,
-                                                                )),
-                                                                ..default()
-                                                            },
-                                                            ..default()
-                                                        },
-                                                        collider: Collider {
-                                                            kind: ColliderKind::Movable,
-                                                            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                            on_ground: false,
-                                                        },
-                                                        gravity: Gravity::default(),
-                                                        velocity: Velocity::default(),
-                                                    }),
+                                                    31 => camera_anchors.push(default_transform),
+                                                    32 => boxes.push(default_transform),
                                                     26 | 10 => (),
-                                                    _ => colliders.push((
-                                                        Collider {
-                                                            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                            kind: ColliderKind::Solid,
-                                                            on_ground: false,
-                                                        },
-                                                        default_transform.clone(),
-                                                    )),
+                                                    _ => colliders.push(default_transform),
                                                 };
                                             }
 
@@ -319,19 +291,54 @@ pub fn process_loaded_tile_maps(
                                 }
                             },
                         );
-
+                        let box_texture = asset_server.load("box.png");
                         commands.entity(layer_entity).insert(Transform::from_xyz(
                             offset_x,
                             -offset_y,
                             layer_index as f32,
                         ));
                         map.add_layer(&mut commands, layer_index as u16, layer_entity);
+                        // TODO you could loop over the bundles and just add them to make this a little prittier
                         // commands.spawn_batch(debug_boxes);
-                        commands.spawn_batch(colliders);
-                        commands.spawn_batch(cell_towers);
+                        commands.spawn_batch(colliders.into_iter().map(|v| {
+                            (
+                                WorldObject,
+                                Collider {
+                                    size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                    kind: ColliderKind::Solid,
+                                    on_ground: false,
+                                },
+                                v,
+                            )
+                        }));
+                        commands.spawn_batch(
+                            cell_towers.into_iter().map(|v| (WorldObject, CellTower, v)),
+                        );
                         commands.spawn_batch(players);
-                        commands.spawn_batch(camera_anchors);
-                        commands.spawn_batch(boxes);
+                        commands.spawn_batch(
+                            camera_anchors
+                                .into_iter()
+                                .map(|v| (WorldObject, CameraAnchor, v)),
+                        );
+                        commands.spawn_batch(boxes.into_iter().map(move |v| BoxBundle {
+                            sprite_bundle: SpriteBundle {
+                                texture: box_texture.clone(),
+                                transform: v,
+                                sprite: Sprite {
+                                    custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                                    ..default()
+                                },
+                                ..default()
+                            },
+                            collider: Collider {
+                                kind: ColliderKind::Movable,
+                                size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                on_ground: false,
+                            },
+                            gravity: Gravity::default(),
+                            velocity: Velocity::default(),
+                            world_object: WorldObject,
+                        }));
                     }
                     first_gid += tileset.tilecount;
                 }
