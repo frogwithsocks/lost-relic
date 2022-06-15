@@ -57,15 +57,19 @@ fn handle_collisions(
     assets: Res<Assets<TiledMap>>,
     map_query: Query<&Handle<TiledMap>>,
 ) {
-    let dimensions = assets
-        .get(map_query.single())
-        .map(|tm| {
-            (
-                tm.map.width as f32 * BLOCK_SIZE,
-                tm.map.height as f32 * BLOCK_SIZE,
-            )
-        })
-        .unwrap_or((16.0 * BLOCK_SIZE, 16.0 * BLOCK_SIZE));
+    let dimensions = match map_query.get_single() {
+        Ok(handle) => assets
+            .get(handle)
+            .map(|tm| {
+                (
+                    tm.map.width as f32 * BLOCK_SIZE,
+                    tm.map.height as f32 * BLOCK_SIZE,
+                )
+            })
+            .unwrap_or((16.0 * BLOCK_SIZE, 16.0 * BLOCK_SIZE)),
+        Err(_) => return,
+    };
+
     let mut partition = SpatialPartition::new(dimensions.0 as usize, dimensions.1 as usize);
     let solid: Vec<(Entity, &Transform, &Collider)> = colliders
         .iter()
@@ -147,7 +151,6 @@ fn handle_collisions(
                                 update_velocity.insert(other_entity);
                             }
                             ColliderKind::Death => {
-                                println!("death");
                                 events.send(PlayerEvent::Death);
                                 panic!("death");
                             }
@@ -235,7 +238,6 @@ fn handle_collisions(
                                 update_velocity.insert(other_entity);
                             }
                             ColliderKind::Death => {
-                                println!("death");
                                 events.send(PlayerEvent::Death);
                                 panic!("death");
                             }
@@ -285,10 +287,8 @@ struct SpatialPartition {
 impl SpatialPartition {
     const CELL_SIZE: f32 = BLOCK_SIZE * 4.0;
     fn new(real_width: usize, real_height: usize) -> Self {
-        let width =
-            (real_width as f32 / Self::CELL_SIZE).ceil() as usize * 2;
-        let height =
-            (real_height as f32 / Self::CELL_SIZE).ceil() as usize * 2;
+        let width = (real_width as f32 / Self::CELL_SIZE).ceil() as usize * 2;
+        let height = (real_height as f32 / Self::CELL_SIZE).ceil() as usize * 2;
         let adjust = Vec3::new(real_width as f32 / 2.0, real_height as f32 / 2.0, 0.0);
         let mut partition = Vec::with_capacity(width);
         for i in 0..width {

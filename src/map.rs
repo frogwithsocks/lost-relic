@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::{tiled_loader::{TiledMap, TiledMapBundle}, collide::{PlayerEvent, Collider, ColliderKind}};
+use crate::{
+    collide::{Collider, ColliderKind, PlayerEvent},
+    tiled_loader::{TiledMap, TiledMapBundle},
+};
 
 pub const BLOCK_SIZE: f32 = 96.0;
 
@@ -9,7 +12,8 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_map).add_system(death_update_map);
+        app.add_startup_system(spawn_map)
+            .add_system(death_update_map);
     }
 }
 
@@ -31,23 +35,34 @@ fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
         ..default()
     });
 
-    commands.spawn_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::CRIMSON,
-            custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+    commands
+        .spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::CRIMSON,
+                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                ..default()
+            },
+            transform: Transform::from_xyz(8.0 * BLOCK_SIZE, 5.0 * BLOCK_SIZE, 2.0),
             ..default()
-        },
-        transform: Transform::from_xyz(8.0 * BLOCK_SIZE, 5.0 * BLOCK_SIZE, 2.0),
-        ..default()
-    }).insert(Collider {
-        size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-        kind: ColliderKind::Death,
-        ..default()
-    });
+        })
+        .insert(Collider {
+            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+            kind: ColliderKind::Death,
+            ..default()
+        });
 }
 
-fn death_update_map(mut player_events: EventReader<PlayerEvent>, mut commands: Commands, mut map_query: MapQuery) {
-    if player_events.iter().filter(|e| **e == PlayerEvent::Death).count() > 0 {
+fn death_update_map(
+    mut player_events: EventReader<PlayerEvent>,
+    mut commands: Commands,
+    mut map_query: MapQuery,
+) {
+    if player_events
+        .iter()
+        .filter(|e| **e == PlayerEvent::Death)
+        .count()
+        > 0
+    {
         map_query.despawn(&mut commands, 0u16);
     }
 }

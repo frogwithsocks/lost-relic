@@ -13,7 +13,7 @@ use crate::camera::CameraAnchor;
 use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 use crate::player::{PlayerBundle, PlayerTexture};
-use crate::velocity::{Velocity, Gravity};
+use crate::velocity::{Gravity, Velocity};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -239,10 +239,8 @@ pub fn process_loaded_tile_maps(
 
                                 let default_transform = Transform {
                                     translation: Vec3::new(
-                                        (BLOCK_SIZE * (x as f32))
-                                            + (BLOCK_SIZE / 2.0),
-                                        -(BLOCK_SIZE * (y as f32))
-                                            + (BLOCK_SIZE / 2.0),
+                                        (BLOCK_SIZE * (x as f32)) + (BLOCK_SIZE / 2.0),
+                                        -(BLOCK_SIZE * (y as f32)) + (BLOCK_SIZE / 2.0),
                                         1.0,
                                     ) + adjustment,
                                     ..default()
@@ -270,14 +268,16 @@ pub fn process_loaded_tile_maps(
                                                     )),
                                                     31 => camera_anchors.push((
                                                         CameraAnchor,
-                                                        default_transform.clone()
+                                                        default_transform.clone(),
                                                     )),
                                                     32 => boxes.push(BoxBundle {
                                                         sprite_bundle: SpriteBundle {
                                                             texture: asset_server.load("box.png"),
                                                             transform: default_transform.clone(),
-                                                            sprite: Sprite{
-                                                                custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                                                            sprite: Sprite {
+                                                                custom_size: Some(Vec2::new(
+                                                                    BLOCK_SIZE, BLOCK_SIZE,
+                                                                )),
                                                                 ..default()
                                                             },
                                                             ..default()

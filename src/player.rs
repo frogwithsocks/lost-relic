@@ -177,7 +177,9 @@ fn update_latency(
     mut latency_counter: ResMut<Latency>,
     time: Res<Time>,
 ) {
-    latency_counter.0.push_back((time.delta_seconds() * 1000.0).floor() as i32);
+    latency_counter
+        .0
+        .push_back((time.delta_seconds() * 1000.0).floor() as i32);
     while latency_counter.0.len() > 50 {
         latency_counter.0.pop_front();
     }

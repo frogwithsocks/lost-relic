@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{player::{Latency, Player}, collide::PlayerEvent};
+use crate::{
+    collide::PlayerEvent,
+    player::{Latency, Player},
+};
 
 pub struct UiPlugin;
 
@@ -36,35 +39,39 @@ fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         })
         .with_children(|parent| {
-            parent.spawn_bundle(ImageBundle {
-                style: Style {
-                    size: Size::new(Val::Px(96.0), Val::Auto),
-                    ..default()
-                },
-                image: asset_server.load("wifi_3.png").into(),
-                ..default()
-            }).insert(LatencyImage);
-
-            parent.spawn_bundle(TextBundle {
-                style: Style {
-                    align_self: AlignSelf::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                text: Text::with_section(
-                    "0ms",
-                    TextStyle {
-                        font,
-                        font_size: 50.0,
-                        color: Color::BLACK,
-                    },
-                    TextAlignment {
-                        horizontal: HorizontalAlign::Center,
+            parent
+                .spawn_bundle(ImageBundle {
+                    style: Style {
+                        size: Size::new(Val::Px(96.0), Val::Auto),
                         ..default()
                     },
-                ),
-                ..default()
-            }).insert(LatencyText);
+                    image: asset_server.load("wifi_3.png").into(),
+                    ..default()
+                })
+                .insert(LatencyImage);
+
+            parent
+                .spawn_bundle(TextBundle {
+                    style: Style {
+                        align_self: AlignSelf::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    text: Text::with_section(
+                        "0ms",
+                        TextStyle {
+                            font,
+                            font_size: 50.0,
+                            color: Color::BLACK,
+                        },
+                        TextAlignment {
+                            horizontal: HorizontalAlign::Center,
+                            ..default()
+                        },
+                    ),
+                    ..default()
+                })
+                .insert(LatencyText);
         });
 }
 
@@ -75,7 +82,6 @@ fn update_latency_text(
     mut image_query: Query<&mut UiImage, With<LatencyImage>>,
     mut player_query: Query<&mut Player>,
     mut events: EventWriter<PlayerEvent>,
-
 ) {
     let mut text = text_query.single_mut();
     let mut image = image_query.single_mut();
