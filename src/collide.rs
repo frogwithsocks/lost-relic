@@ -49,6 +49,32 @@ pub struct Collider {
     pub on_ground: bool,
 }
 
+#[derive(Eq, PartialEq)]
+enum Axis {
+    X,
+    Y,
+}
+
+impl From<&Collision> for Axis {
+    fn from(collision: &Collision) -> Self {
+        match collision {
+            Collision::Right | Collision::Left => Axis::X,
+            Collision::Top | Collision::Bottom => Axis::Y,
+            _ => panic!("impossible axis"),
+        }
+    }
+}
+
+impl From<usize> for Axis {
+    fn from(i: usize) -> Self {
+        match i {
+            0 => Axis::X,
+            1 => Axis::Y,
+            _ => panic!("invalid axis"),
+        }
+    }
+}
+
 fn handle_collisions(
     mut events: EventWriter<PlayerEvent>,
     mut colliders: Query<(Entity, &mut Transform, &mut Collider)>,
@@ -76,17 +102,6 @@ fn handle_collisions(
         .filter(|(_, _, c)| !matches!(c.kind, ColliderKind::Movable))
         .collect();
     partition.fill(&solid);
-    let delta = time.delta_seconds();
-    let mut positions: HashMap<Entity, Vec3> = HashMap::new();
-    let mut grounded: HashSet<Entity> = HashSet::new();
-    for (entity, transform, _) in colliders.iter() {
-        let mut position = transform.translation;
-        if let Ok(velocity) = velocity_query.get_component::<Velocity>(entity) {
-            position.y = (position.y + velocity.linvel.y * delta).floor();
-        }
-        positions.insert(entity, position);
-    }
-    let mut update_velocity = HashSet::new();
     let movables: Vec<(Entity, Collider)> = colliders
         .iter()
         .filter_map(|(e, _, c)| {
@@ -97,173 +112,102 @@ fn handle_collisions(
             }
         })
         .collect();
-    let mut update: HashSet<Entity> = movables.clone().into_iter().map(|(e, _)| e).collect();
+    let mut grounded: HashSet<Entity> = HashSet::new();
+    let delta = time.delta_seconds();
 
-    while update.len() > 0 {
-        let mut again: HashSet<Entity> = HashSet::new();
-        for entity in update {
-            let collider = colliders.get_component::<Collider>(entity).unwrap();
-            let mut position = *positions.get(&entity).unwrap();
-            let size = collider.size;
-            for (other_entity, other_collider) in partition
-                .possibilities(position, collider.size)
-                .iter()
-                .map(|(e, _, c)| (*e, *c))
-                .chain(movables.iter().filter_map(|(e, c)| {
-                    if e.id() != entity.id() {
-                        Some((*e, *c))
-                    } else {
-                        None
-                    }
-                }))
-            {
-                let other_size = other_collider.size;
-                let other_position = *positions.get(&other_entity).unwrap();
-                if let Some(collision) = collide(other_position, other_size, position, size) {
-                    if matches!(collision, Collision::Bottom) {
-                        grounded.insert(entity);
-                    } else {
-                        grounded.insert(other_entity);
-                    }
-                    match collision {
-                        Collision::Top | Collision::Bottom => match other_collider.kind {
-                            ColliderKind::Solid => {
-                                position += push_force(
-                                    &collision,
-                                    position,
-                                    size,
-                                    other_position,
-                                    other_size,
-                                );
-                                again.insert(entity);
-                                update_velocity.insert(entity);
-                            }
-                            ColliderKind::Movable => {
-                                let push = push_force(
-                                    &collision,
-                                    position,
-                                    size,
-                                    other_position,
-                                    other_size,
-                                );
-                                positions.insert(other_entity, other_position - push);
-                                again.insert(other_entity);
-                                update_velocity.insert(other_entity);
-                            }
-                            ColliderKind::Death => {
-                                events.send(PlayerEvent::Death);
-                                panic!("death");
-                            }
-                            _ => {}
-                        },
-                        _ => continue,
-                    }
-                }
+    for i in (0..=1).rev() {
+        let axis = Axis::from(i);
+        let mut positions: HashMap<Entity, Vec3> = HashMap::new();
+        for (entity, transform, _) in colliders.iter() {
+            let mut position = transform.translation;
+            if let Ok(velocity) = velocity_query.get_component::<Velocity>(entity) {
+                position[i] = (position[i] + velocity.linvel[i] * delta).floor();
             }
             positions.insert(entity, position);
         }
-        update = again;
-    }
+        let mut update_velocity = HashSet::new();
+        let mut update: HashSet<Entity> = movables.clone().into_iter().map(|(e, _)| e).collect();
 
-    for entity in &update_velocity {
-        if delta > 0.0 {
-            let target = positions.get(&entity).unwrap().y;
-            let current = colliders
-                .get_component::<Transform>(*entity)
-                .unwrap()
-                .translation
-                .y;
-            let mut velocity = velocity_query
-                .get_component_mut::<Velocity>(*entity)
-                .unwrap();
-            velocity.linvel.y = (target - current) / delta;
-        }
-    }
-
-    positions.clear();
-    for (entity, transform, _) in colliders.iter() {
-        let mut position = transform.translation;
-        if let Ok(velocity) = velocity_query.get_component::<Velocity>(entity) {
-            position = (position + velocity.linvel * delta).floor();
-        }
-        positions.insert(entity, position);
-    }
-    update = movables.clone().into_iter().map(|(e, _)| e).collect();
-    update_velocity.clear();
-
-    while update.len() > 0 {
-        let mut again: HashSet<Entity> = HashSet::new();
-        for entity in update {
-            let collider = colliders.get_component::<Collider>(entity).unwrap();
-            let mut position = *positions.get(&entity).unwrap();
-            let size = collider.size;
-            for (other_entity, other_collider) in partition
-                .possibilities(position, collider.size)
-                .iter()
-                .map(|(e, _, c)| (*e, *c))
-                .chain(movables.iter().filter_map(|(e, c)| {
-                    if e.id() != entity.id() {
-                        Some((*e, *c))
-                    } else {
-                        None
-                    }
-                }))
-            {
-                let other_size = other_collider.size;
-                let other_position = *positions.get(&other_entity).unwrap();
-                if let Some(collision) = collide(other_position, other_size, position, size) {
-                    match collision {
-                        Collision::Right | Collision::Left => match other_collider.kind {
-                            ColliderKind::Solid => {
-                                position += push_force(
-                                    &collision,
-                                    position,
-                                    size,
-                                    other_position,
-                                    other_size,
-                                );
-                                again.insert(entity);
-                                update_velocity.insert(entity);
+        while update.len() > 0 {
+            let mut again: HashSet<Entity> = HashSet::new();
+            for entity in update {
+                let collider = colliders.get_component::<Collider>(entity).unwrap();
+                let mut position = *positions.get(&entity).unwrap();
+                let size = collider.size;
+                for (other_entity, other_collider) in partition
+                    .possibilities(position, collider.size)
+                    .iter()
+                    .map(|(e, _, c)| (*e, *c))
+                    .chain(movables.iter().filter_map(|(e, c)| {
+                        if e.id() != entity.id() {
+                            Some((*e, *c))
+                        } else {
+                            None
+                        }
+                    }))
+                {
+                    let other_size = other_collider.size;
+                    let other_position = *positions.get(&other_entity).unwrap();
+                    if let Some(collision) = collide(other_position, other_size, position, size) {
+                        if matches!(collision, Collision::Bottom) {
+                            grounded.insert(entity);
+                        } else {
+                            grounded.insert(other_entity);
+                        }
+                        if Axis::from(&collision) == axis {
+                            match other_collider.kind {
+                                ColliderKind::Solid => {
+                                    position += push_force(
+                                        &collision,
+                                        position,
+                                        size,
+                                        other_position,
+                                        other_size,
+                                    );
+                                    again.insert(entity);
+                                    update_velocity.insert(entity);
+                                }
+                                ColliderKind::Movable => {
+                                    let push = push_force(
+                                        &collision,
+                                        position,
+                                        size,
+                                        other_position,
+                                        other_size,
+                                    );
+                                    positions.insert(other_entity, other_position - push);
+                                    again.insert(other_entity);
+                                    update_velocity.insert(other_entity);
+                                }
+                                ColliderKind::Death => {
+                                    events.send(PlayerEvent::Death);
+                                    panic!("death");
+                                }
+                                ColliderKind::Sensor => {
+                                    events.send(PlayerEvent::Sensor(other_entity.id()))
+                                }
+                                _ => {}
                             }
-                            ColliderKind::Movable => {
-                                let push = push_force(
-                                    &collision,
-                                    position,
-                                    size,
-                                    other_position,
-                                    other_size,
-                                );
-                                positions.insert(other_entity, other_position - push);
-                                again.insert(other_entity);
-                                update_velocity.insert(other_entity);
-                            }
-                            ColliderKind::Death => {
-                                events.send(PlayerEvent::Death);
-                                panic!("death");
-                            }
-                            _ => {}
-                        },
-                        _ => continue,
+                        }
                     }
                 }
+                positions.insert(entity, position);
             }
-            positions.insert(entity, position);
+            update = again;
         }
-        update = again;
-    }
 
-    for entity in update_velocity {
-        if delta > 0.0 {
-            let target = positions.get(&entity).unwrap().x;
-            let current = colliders
-                .get_component::<Transform>(entity)
-                .unwrap()
-                .translation
-                .x;
-            let mut velocity = velocity_query
-                .get_component_mut::<Velocity>(entity)
-                .unwrap();
-            velocity.linvel.x = (target - current) / delta;
+        for entity in &update_velocity {
+            if delta > 0.0 {
+                let target = positions.get(&entity).unwrap()[i];
+                let current = colliders
+                    .get_component::<Transform>(*entity)
+                    .unwrap()
+                    .translation[i];
+                let mut velocity = velocity_query
+                    .get_component_mut::<Velocity>(*entity)
+                    .unwrap();
+                velocity.linvel[i] = (target - current) / delta;
+            }
         }
     }
 
@@ -309,58 +253,41 @@ impl SpatialPartition {
 
     fn fill(&mut self, entities: &Vec<(Entity, &Transform, &Collider)>) {
         for (entity, transform, collider) in entities {
-            let (a, b, c, d) = self.spatial_index(transform.translation, collider.size);
-            self.partition[a.0][a.1].push((*entity, transform.translation, **collider));
-            if b != c && b != d {
-                self.partition[b.0][b.1].push((*entity, transform.translation, **collider));
-            }
-            if c != b && c != a {
-                self.partition[c.0][c.1].push((*entity, transform.translation, **collider));
-            }
-            if d != b && d != a {
-                self.partition[d.0][d.1].push((*entity, transform.translation, **collider));
+            let position = transform.translation;
+            let (min_x, max_x, min_y, max_y) = self.spatial_index(position, collider.size);
+            for i in min_x..=max_x {
+                for j in min_y..=max_y {
+                    self.partition[i][j].push((*entity, transform.translation, **collider));
+                }
             }
         }
     }
 
     // TODO: ignore indices outside of bounds?
     fn possibilities(&self, position: Vec3, size: Vec2) -> Vec<&(Entity, Vec3, Collider)> {
-        let (a, b, c, d) = self.spatial_index(position, size);
-        self.partition[a.0][a.1]
-            .iter()
-            .chain(self.partition[b.0][b.1].iter())
-            .chain(self.partition[c.0][c.1].iter())
-            .chain(self.partition[d.0][d.1].iter())
-            .collect()
+        let mut nearby = Vec::new();
+        let (min_x, max_x, min_y, max_y) = self.spatial_index(position, size);
+        for i in min_x..=max_x {
+            for j in min_y..=max_y {
+                for item in &self.partition[i][j] {
+                    nearby.push(item);
+                }
+            }
+        }
+
+        nearby
     }
 
-    fn spatial_index(
-        &self,
-        position: Vec3,
-        size: Vec2,
-    ) -> (
-        (usize, usize),
-        (usize, usize),
-        (usize, usize),
-        (usize, usize),
-    ) {
+    fn spatial_index(&self, position: Vec3, size: Vec2) -> (usize, usize, usize, usize) {
         let position = position + self.adjust;
         let size = size.extend(0.0);
-        let hx = Vec3::new(size.x / 2.0, 0.0, 0.0);
-        let hy = Vec3::new(0.0, size.y / 2.0, 0.0);
-        let (a, b, c, d) = (
+        let (a, b) = (
             ((position - size / 2.0) / Self::CELL_SIZE).floor(),
             ((position + size / 2.0) / Self::CELL_SIZE).floor(),
-            ((position + hy - hx) / Self::CELL_SIZE).floor(),
-            ((position - hy + hx) / Self::CELL_SIZE).floor(),
         );
 
-        (
-            (a.x as usize, a.y as usize),
-            (b.x as usize, b.y as usize),
-            (c.x as usize, c.y as usize),
-            (d.x as usize, d.y as usize),
-        )
+        // (min_x, max_x, min_y, max_y)
+        (a.x as usize, b.x as usize, a.y as usize, b.y as usize)
     }
 }
 
@@ -376,12 +303,4 @@ fn push_force(collision: &Collision, a_pos: Vec3, a_size: Vec2, b_pos: Vec3, b_s
     }
     .extend(0.0))
     .round()
-}
-
-fn zero_velocity(collision: &Collision, linvel: Vec3) -> Vec3 {
-    match collision {
-        Collision::Left | Collision::Right => Vec3::new(0.0, linvel.y, linvel.z),
-        Collision::Top | Collision::Bottom => Vec3::new(linvel.x, 0.0, linvel.z),
-        Collision::Inside => panic!("impossible state"),
-    }
 }
