@@ -69,7 +69,7 @@ fn handle_collisions(
     let mut partition = SpatialPartition::new(dimensions.0 as usize, dimensions.1 as usize);
     let solid: Vec<(Entity, &Transform, &Collider)> = colliders
         .iter()
-        .filter(|(_, _, c)| matches!(c.kind, ColliderKind::Solid))
+        .filter(|(_, _, c)| !matches!(c.kind, ColliderKind::Movable))
         .collect();
     partition.fill(&solid);
     let delta = time.delta_seconds();
@@ -147,6 +147,7 @@ fn handle_collisions(
                                 update_velocity.insert(other_entity);
                             }
                             ColliderKind::Death => {
+                                println!("death");
                                 events.send(PlayerEvent::Death);
                                 panic!("death");
                             }
@@ -234,6 +235,7 @@ fn handle_collisions(
                                 update_velocity.insert(other_entity);
                             }
                             ColliderKind::Death => {
+                                println!("death");
                                 events.send(PlayerEvent::Death);
                                 panic!("death");
                             }
