@@ -32,5 +32,4 @@ fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ..default()
     });
-        
 }
