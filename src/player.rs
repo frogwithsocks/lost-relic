@@ -178,10 +178,8 @@ fn update_latency(
     mut latency_counter: ResMut<Latency>,
     time: Res<Time>,
 ) {
-    latency_counter
-        .0
-        .push_back((time.delta_seconds() * 1000.0).floor() as i32);
-    while latency_counter.0.len() > 10 {
+    latency_counter.0.push_back((time.delta_seconds() * 1000.0).floor() as i32);
+    while latency_counter.0.len() > 50 {
         latency_counter.0.pop_front();
     }
     for (transform, mut player) in player_query.iter_mut() {
@@ -196,6 +194,6 @@ fn update_latency(
             player.latency = 0;
             return;
         }
-        player.latency = (shortest / 50.0) as usize;
+        player.latency = (shortest / (BLOCK_SIZE / 2.0)) as usize;
     }
 }

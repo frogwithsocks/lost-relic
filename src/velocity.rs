@@ -13,7 +13,7 @@ pub struct Gravity(f32);
 
 impl Default for Gravity {
     fn default() -> Self {
-        Gravity(150.0)
+        Gravity(100.0)
     }
 }
 
