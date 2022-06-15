@@ -46,7 +46,10 @@ impl PlayerBundle {
                     custom_size: Some(Vec2::new((22.0 / 32.0) * BLOCK_SIZE, BLOCK_SIZE)),
                     ..default()
                 },
-                transform,
+                transform: Transform {
+                    translation: transform.translation + Vec3::Z * 100.0,
+                    ..transform
+                },
                 ..default()
             },
             player: Player::default(),
@@ -161,12 +164,12 @@ fn update_player(
                     // facing right is false
                     player_sprite.flip_x = true;
                     animation.running = true;
-                    velocity.linvel += Vec3::X * -150.0
+                    velocity.linvel += Vec3::X * -200.0
                 }
                 GameInput::Right => {
                     player_sprite.flip_x = false;
                     animation.running = true;
-                    velocity.linvel += Vec3::X * 150.0
+                    velocity.linvel += Vec3::X * 200.0
                 }
             }
         }
