@@ -287,8 +287,8 @@ pub fn process_loaded_tile_maps(
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
                                                             on_ground: false,
                                                         },
-                                                        velocity: Velocity::default(),
                                                         gravity: Gravity::default(),
+                                                        velocity: Velocity::default(),
                                                     }),
                                                     26 | 10 => (),
                                                     _ => colliders.push((
