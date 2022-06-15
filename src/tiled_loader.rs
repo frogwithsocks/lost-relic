@@ -13,6 +13,7 @@ use crate::camera::CameraAnchor;
 use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 use crate::player::{PlayerBundle, PlayerTexture};
+use crate::velocity::{Velocity, Gravity};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -31,6 +32,8 @@ pub struct BoxBundle {
     #[bundle]
     sprite_bundle: SpriteBundle,
     collider: Collider,
+    velocity: Velocity,
+    gravity: Gravity,
 }
 
 #[derive(TypeUuid)]
@@ -283,7 +286,9 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Movable,
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
                                                             on_ground: false,
-                                                        }
+                                                        },
+                                                        velocity: Velocity::default(),
+                                                        gravity: Gravity::default(),
                                                     }),
                                                     26 | 10 => (),
                                                     _ => colliders.push((
