@@ -10,7 +10,7 @@ pub struct EventPlugin;
 
 impl Plugin for EventPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_events);
+        app.add_system_to_stage(CoreStage::PostUpdate, handle_events);
     }
 }
 
