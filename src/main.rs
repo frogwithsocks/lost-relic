@@ -13,6 +13,9 @@ use ui::UiPlugin;
 use velocity::VelocityPlugin;
 use event::EventPlugin;
 use trigger::{ButtonRes, DoorRes};
+use state::GameState;
+use main_menu::MainMenuPlugin;
+use slider::SliderPlugin;
 
 mod animation;
 mod camera;
@@ -24,9 +27,13 @@ mod trigger;
 mod ui;
 mod velocity;
 mod event;
+mod main_menu;
+mod state;
+mod slider;
 
 fn main() {
     App::new()
+        .add_state(GameState::MainMenu)
         .add_plugins(DefaultPlugins)
         .add_event::<GameEvent>()
         .add_plugin(TilemapPlugin)
@@ -39,6 +46,8 @@ fn main() {
         .add_plugin(CameraPlugin)
         .add_plugin(UiPlugin)
         .add_plugin(EventPlugin)
+        .add_plugin(MainMenuPlugin)
+        .add_plugin(SliderPlugin)
         .insert_resource(ButtonRes(HashMap::new()))
         .insert_resource(DoorRes(HashMap::new()))
         .insert_resource(Msaa { samples: 1 })

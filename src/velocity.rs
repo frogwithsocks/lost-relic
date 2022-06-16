@@ -1,10 +1,15 @@
 use bevy::prelude::*;
+use crate::state::GameState;
 
 pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_gravity.label("gravity"));
+        app
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(update_gravity)
+            );
     }
 }
 

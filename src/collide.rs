@@ -9,13 +9,19 @@ use crate::{
     map::BLOCK_SIZE,
     tiled_loader::TiledMap,
     velocity::{Gravity, Velocity},
+    state::GameState,
 };
 
 pub struct CollidePlugin;
 
 impl Plugin for CollidePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_collisions);
+        app
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(handle_collisions)
+                    .label("collision")
+            );
     }
 }
 
@@ -35,9 +41,8 @@ pub struct Movable;
 #[derive(Debug, Clone, Default, Copy)]
 pub enum ColliderKind {
     #[default]
-    Solid,
     Sensor,
-    Movable,
+    Movable(f32),
     Death,
 }
 
@@ -45,7 +50,17 @@ pub enum ColliderKind {
 pub struct Collider {
     pub size: Vec2,
     pub kind: ColliderKind,
-    pub on_ground: bool,
+    pub flags: u8,
+}
+
+impl Collider {
+    fn weight(&self) -> f32 {
+        match self.kind {
+            ColliderKind::Movable(w) => w,
+            ColliderKind::Death => f32::INFINITY,
+            ColliderKind::Sensor => f32::INFINITY,
+        }
+    }
 }
 
 #[derive(Eq, PartialEq)]
@@ -97,31 +112,38 @@ fn handle_collisions(
     let mut partition = SpatialPartition::new(dimensions.0 as usize, dimensions.1 as usize);
     let solid: Vec<(Entity, &Transform, &Collider)> = colliders
         .iter()
-        .filter(|(_, _, c)| !matches!(c.kind, ColliderKind::Movable))
+        .filter(|(_, _, c)| c.weight() == f32::INFINITY)
         .collect();
     partition.fill(&solid);
     let movables: Vec<(Entity, Collider)> = colliders
         .iter()
         .filter_map(|(e, _, c)| {
-            if velocity_query.get_component::<Velocity>(e).is_ok() {
+            if c.weight() != f32::INFINITY {
                 Some((e, *c))
             } else {
                 None
             }
         })
         .collect();
-    let mut grounded: HashSet<Entity> = HashSet::new();
     let delta = time.delta_seconds();
+
+    for (_, _, mut c) in colliders.iter_mut() {
+        c.flags = 0;
+    }
 
     for i in (0..=1).rev() {
         let axis = Axis::from(i);
-        let mut positions: HashMap<Entity, Vec3> = HashMap::new();
-        for (entity, transform, _) in colliders.iter() {
+        let mut positions: HashMap<Entity, (Vec3, u8)> = HashMap::new();
+        for (entity, transform, collider) in colliders.iter() {
             let mut position = transform.translation;
             if let Ok(velocity) = velocity_query.get_component::<Velocity>(entity) {
                 position[i] = (position[i] + velocity.linvel[i] * delta).floor();
             }
-            positions.insert(entity, position);
+            if collider.weight() == f32::INFINITY {
+                positions.insert(entity, (position, 0b1111));
+            } else {
+                positions.insert(entity, (position, 0b0000));
+            }
         }
         let mut update_velocity = HashSet::new();
         let mut update: HashSet<Entity> = movables.clone().into_iter().map(|(e, _)| e).collect();
@@ -130,7 +152,9 @@ fn handle_collisions(
             let mut again: HashSet<Entity> = HashSet::new();
             for entity in update {
                 let collider = colliders.get_component::<Collider>(entity).unwrap();
-                let mut position = *positions.get(&entity).unwrap();
+                let state = *positions.get(&entity).unwrap();
+                let mut position = state.0;
+                let mut flags = state.1;
                 let size = collider.size;
                 for (other_entity, other_collider) in partition
                     .possibilities(position, collider.size)
@@ -145,81 +169,91 @@ fn handle_collisions(
                     }))
                 {
                     let other_size = other_collider.size;
-                    let other_position = *positions.get(&other_entity).unwrap();
-                    if let Some(collision) = collide(other_position, other_size, position, size) {
-                        if matches!(axis, Axis::Y) {
-                            if matches!(collision, Collision::Bottom) {
-                                grounded.insert(entity);
-                            } else {
-                                grounded.insert(other_entity);
+                        let other_state = *positions.get(&other_entity).unwrap();
+                        let mut other_position = other_state.0;
+                        let other_flags = other_state.1;
+                        if let Some(collision) = collide(other_position, other_size, position, size) {
+                            if Axis::from(&collision) == axis {
+                                match other_collider.kind {
+                                    ColliderKind::Movable(other_weight) => {
+                                        let push = push_force(
+                                            &collision,
+                                            position,
+                                            size,
+                                            other_position,
+                                            other_size,
+                                        );
+                                        let f = flag(&collision);
+                                        let of = opposite(f);
+                                        flags |= f;
+                                        if (collider.weight() <= other_weight && flags & of == 0) || other_flags & f != 0 {
+                                            position += push;
+                                            again.insert(entity);
+                                            update_velocity.insert(entity);
+                                        } else {
+                                            other_position -= push;
+                                            again.insert(other_entity);
+                                            update_velocity.insert(other_entity);
+                                        }
+                                        positions.insert(other_entity, (other_position, other_flags | of));
+                                    }
+                                    ColliderKind::Death => {
+                                        events.send(GameEvent::Death);
+                                    }
+                                    ColliderKind::Sensor => {
+                                        events.send(GameEvent::Sensor(other_entity.id()))
+                                    }
+                                }
                             }
                         }
-                        if Axis::from(&collision) == axis {
-                            match other_collider.kind {
-                                ColliderKind::Solid => {
-                                    position += push_force(
-                                        &collision,
-                                        position,
-                                        size,
-                                        other_position,
-                                        other_size,
-                                    );
-                                    again.insert(entity);
-                                    update_velocity.insert(entity);
-                                }
-                                ColliderKind::Movable => {
-                                    let push = push_force(
-                                        &collision,
-                                        position,
-                                        size,
-                                        other_position,
-                                        other_size,
-                                    );
-                                    positions.insert(other_entity, other_position - push);
-                                    again.insert(other_entity);
-                                    update_velocity.insert(other_entity);
-                                }
-                                ColliderKind::Death => {
-                                    events.send(GameEvent::Death);
-                                }
-                                ColliderKind::Sensor => {
-                                    events.send(GameEvent::Sensor(other_entity.id()))
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
                 }
-                positions.insert(entity, position);
+                positions.insert(entity, (position, flags));
             }
             update = again;
         }
 
-        for entity in &update_velocity {
+        for (entity, (position, flags)) in positions {
             if delta > 0.0 {
-                let target = positions.get(&entity).unwrap()[i];
-                let current = colliders
-                    .get_component::<Transform>(*entity)
-                    .unwrap()
-                    .translation[i];
-                let mut velocity = velocity_query
-                    .get_component_mut::<Velocity>(*entity)
-                    .unwrap();
-                velocity.linvel[i] = (target - current) / delta;
+                if let Ok(mut velocity) = velocity_query.get_component_mut::<Velocity>(entity) {
+                    let target = position[i];
+                    let current = colliders
+                        .get_component::<Transform>(entity)
+                        .unwrap()
+                        .translation[i];
+                    velocity.linvel[i] = (target - current) / delta;
+                }
             }
+            colliders.get_component_mut::<Collider>(entity).unwrap().flags |= flags;
         }
     }
 
-    for (entity, mut transform, mut collider) in colliders.iter_mut() {
+    for (entity, mut transform, _) in colliders.iter_mut() {
         if let Ok(mut velocity) = velocity_query.get_component_mut::<Velocity>(entity) {
             let drag = velocity.drag;
             transform.translation = (transform.translation + velocity.linvel * delta).floor();
             velocity.linvel.x -= velocity.linvel.x * drag.x * delta;
             velocity.linvel.y -= velocity.linvel.y * drag.y * delta;
-
-            collider.on_ground = grounded.contains(&entity);
         }
     }
+}
+
+// consider adding bitflags as a dependeny to make this cleaner?
+pub const TOP: u8 = 0b1000;
+pub const BOTTOM: u8 = 0b0001;
+pub const RIGHT: u8 = 0b0100;
+pub const LEFT: u8 = 0b0010;
+
+fn flag(collision: &Collision) -> u8 {
+    match collision {
+        Collision::Top | Collision::Inside => TOP,
+        Collision::Bottom => BOTTOM,
+        Collision::Right => RIGHT,
+        Collision::Left => LEFT,
+    }
+}
+
+fn opposite(flag: u8) -> u8 {
+    (flag << 4).reverse_bits()
 }
 
 struct SpatialPartition {

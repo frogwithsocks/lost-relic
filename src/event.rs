@@ -5,12 +5,17 @@ use crate::trigger::{ButtonRes, DoorRes, Button};
 use crate::collide::{GameEvent};
 use crate::tiled_loader::WorldObject;
 use crate::map::spawn_map;
+use crate::state::GameState;
 
 pub struct EventPlugin;
 
 impl Plugin for EventPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PostUpdate, handle_events);
+        app
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(handle_events)
+            );
     }
 }
 

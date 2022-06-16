@@ -14,16 +14,21 @@ use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 use crate::player::{PlayerBundle, PlayerTexture};
 use crate::velocity::{Gravity, Velocity};
+use crate::state::GameState;
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
 
 impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
-        app.add_asset::<TiledMap>()
+        app
+            .add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
-            .add_system(process_loaded_tile_maps.label("map_update"))
-            .add_system(set_texture_filters_to_nearest);
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(process_loaded_tile_maps.label("map_update"))
+                    .with_system(set_texture_filters_to_nearest)
+            );
     }
 }
 
@@ -274,15 +279,15 @@ pub fn process_loaded_tile_maps(
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE / 1.25, BLOCK_SIZE / 2.0),
                                                             kind: ColliderKind::Death,
-                                                            on_ground: false,
+                                                            flags: 0,
                                                         },
                                                         default_transform,
                                                     )),
                                                     _ => colliders.push((
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                            kind: ColliderKind::Solid,
-                                                            on_ground: false,
+                                                            kind: ColliderKind::Movable(f32::INFINITY),
+                                                            flags: 0,
                                                         },
                                                         default_transform,
                                                     )),
@@ -337,9 +342,9 @@ pub fn process_loaded_tile_maps(
                                 ..default()
                             },
                             collider: Collider {
-                                kind: ColliderKind::Movable,
+                                kind: ColliderKind::Movable(1.0),
                                 size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                on_ground: false,
+                                flags: 0,
                             },
                             gravity: Gravity::default(),
                             velocity: Velocity {

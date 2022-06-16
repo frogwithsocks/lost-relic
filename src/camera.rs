@@ -1,11 +1,18 @@
-use crate::player::Player;
+use crate::{
+    player::Player,
+    state::GameState,
+};
 use bevy::{prelude::*, render::primitives::Frustum};
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(move_camera);
+        app
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(move_camera)
+            );
     }
 }
 
@@ -28,7 +35,9 @@ fn move_camera(
     let player = match player_query.get_single() {
         Ok(p) => p,
         Err(_) => {
-            camera_query.single_mut().translation = Vec3::Z * 999.9;
+            if let Ok(mut camera) = camera_query.get_single_mut() {
+                camera.translation = Vec3::Z * 999.9;
+            }
             return;
         }
     };

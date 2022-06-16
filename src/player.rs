@@ -1,8 +1,9 @@
 use crate::{
     animation::Animation,
-    collide::{Collider, ColliderKind},
+    collide::{Collider, ColliderKind, BOTTOM},
     map::{CellTower, BLOCK_SIZE},
     velocity::{Gravity, Velocity}, tiled_loader::WorldObject,
+    state::GameState,
 };
 
 use bevy::prelude::*;
@@ -17,11 +18,18 @@ pub struct Latency(pub VecDeque<i32>);
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(load_player_resources)
-            .add_system(player_inputs.label("player"))
-            .add_system(update_player.label("player"))
-            .add_system(update_latency.label("player").after(player_inputs));
-        // .add_system(_print_player_inputs.after("map_update"));
+        app
+            .add_system_set(
+                SystemSet::on_enter(GameState::Play)
+                    .with_system(load_player_resources)
+            )
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(player_inputs)
+                    .with_system(update_player)
+                    .with_system(update_latency.after(player_inputs))
+                    //.with_system(_print_player_inputs.after("map_update"))
+            );
     }
 }
 
@@ -54,9 +62,9 @@ impl PlayerBundle {
             },
             player: Player::default(),
             collider: Collider {
-                kind: ColliderKind::Movable,
+                kind: ColliderKind::Movable(5.0),
                 size: Vec2::new(22.0 / 32.0 * BLOCK_SIZE, BLOCK_SIZE),
-                on_ground: false,
+                flags: 0,
             },
             velocity: Velocity {
                 drag: Vec3::new(20.0, 5.0, 0.0),
@@ -155,7 +163,7 @@ fn update_player(
         for input in inputs {
             match input {
                 GameInput::Jump => {
-                    if collider.on_ground {
+                    if collider.flags & BOTTOM != 0 {
                         velocity.linvel += Vec3::Y * 2000.0;
                     }
                 }

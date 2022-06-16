@@ -1,10 +1,15 @@
 use bevy::prelude::*;
+use crate::state::GameState;
 
 pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_animations);
+        app
+            .add_system_set(
+                SystemSet::on_update(GameState::Play)
+                    .with_system(update_animations)
+            );
     }
 }
 
