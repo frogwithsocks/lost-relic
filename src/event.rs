@@ -8,9 +8,12 @@ use crate::map::spawn_map;
 
 pub struct EventPlugin;
 
+static EVENT_STAGE_LABEL: &'static str = "EVENT_STAGE_LABEL";
+
 impl Plugin for EventPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(handle_events);
+        app.add_stage_after(CoreStage::Update, EVENT_STAGE_LABEL, SystemStage::parallel())
+            .add_system_to_stage(EVENT_STAGE_LABEL, handle_events);
     }
 }
 
