@@ -23,6 +23,7 @@ impl Plugin for CollidePlugin {
 pub enum GameEvent {
     Sensor(u32),
     Death,
+    Win,
 }
 
 #[derive(Component)]

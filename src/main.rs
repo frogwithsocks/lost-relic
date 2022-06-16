@@ -24,7 +24,7 @@ mod trigger;
 mod ui;
 mod velocity;
 mod event;
-
+pub struct Level(u32);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -40,7 +40,7 @@ fn main() {
         .add_plugin(UiPlugin)
         .add_plugin(EventPlugin)
         .insert_resource(ButtonRes(HashMap::new()))
-        .insert_resource(DoorRes(HashMap::new()))
+        .insert_resource(DoorRes(HashMap::new())).insert_resource(Level(0))
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
         .run();
