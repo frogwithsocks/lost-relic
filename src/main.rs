@@ -12,7 +12,7 @@ use tiled_loader::TiledMapPlugin;
 use ui::UiPlugin;
 use velocity::VelocityPlugin;
 use event::EventPlugin;
-use trigger::{ButtonRes, DoorRes};
+use trigger::{DoorRes};
 use state::GameState;
 use main_menu::MainMenuPlugin;
 use slider::SliderPlugin;
@@ -49,8 +49,8 @@ fn main() {
         .add_plugin(EventPlugin)
         .add_plugin(MainMenuPlugin)
         .add_plugin(SliderPlugin)
-        .insert_resource(ButtonRes(HashMap::new()))
-        .insert_resource(DoorRes(HashMap::new())).insert_resource(Level(0))
+        .insert_resource(DoorRes(HashMap::new()))
+        .insert_resource(Level(0))
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
         .run();

@@ -27,7 +27,7 @@ impl Plugin for CollidePlugin {
 
 #[derive(PartialEq, Eq)]
 pub enum GameEvent {
-    Sensor(u32),
+    Sensor(Entity),
     Death,
     Win,
 }
@@ -39,12 +39,16 @@ pub struct Solid;
 pub struct Movable;
 
 // TODO maybe sensors should contain a string which tells it which thing to switch on in the env
-#[derive(Debug, Clone, Default, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum ColliderKind {
-    #[default]
-    Sensor,
     Movable(f32),
     Death,
+}
+
+impl Default for ColliderKind {
+    fn default() -> Self {
+        Self::Movable(f32::INFINITY)
+    }
 }
 
 #[derive(Component, Clone, Default, Copy)]
@@ -59,7 +63,6 @@ impl Collider {
         match self.kind {
             ColliderKind::Movable(w) => w,
             ColliderKind::Death => f32::INFINITY,
-            ColliderKind::Sensor => f32::INFINITY,
         }
     }
 }
@@ -200,9 +203,6 @@ fn handle_collisions(
                                     }
                                     ColliderKind::Death => {
                                         events.send(GameEvent::Death);
-                                    }
-                                    ColliderKind::Sensor => {
-                                        events.send(GameEvent::Sensor(other_entity.id()))
                                     }
                                 }
                             }

@@ -48,13 +48,13 @@ fn test_slider(mut commands: Commands) {
     .insert(Slider {
         activated: false,
         change: 1.0,
-        max_extent: BLOCK_SIZE / 2.0,
+        max_extent: 0.0/*BLOCK_SIZE / 2.0*/,
         extent: 0.0,
     });
 }
 
 #[derive(Component)]
-struct Slider {
+pub struct Slider {
     pub activated: bool,
     extent: f32,
     max_extent: f32,
