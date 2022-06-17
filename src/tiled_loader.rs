@@ -4,6 +4,7 @@ use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::render::render_resource::TextureUsages;
 use bevy_ecs_tilemap::prelude::*;
+use std::path::PathBuf;
 use std::{collections::HashMap, io::BufReader};
 
 use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
@@ -69,7 +70,6 @@ impl AssetLoader for TiledLoader {
 
             let mut dependencies = Vec::new();
             let mut handles = HashMap::default();
-
             for (tileset_index, tileset) in map.tilesets().iter().enumerate() {
                 let tile_path = tileset.image.as_ref().unwrap().source.clone();
                 let asset_path = AssetPath::new(tile_path, None);
@@ -272,7 +272,10 @@ pub fn process_loaded_tile_maps(
                                                     26 | 10 => (),
                                                     35 => colliders.push((
                                                         Collider {
-                                                            size: Vec2::new(BLOCK_SIZE / 1.25, BLOCK_SIZE / 2.0),
+                                                            size: Vec2::new(
+                                                                BLOCK_SIZE / 1.25,
+                                                                BLOCK_SIZE / 2.0,
+                                                            ),
                                                             kind: ColliderKind::Death,
                                                             on_ground: false,
                                                         },
