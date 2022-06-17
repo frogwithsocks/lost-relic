@@ -230,7 +230,7 @@ fn handle_collisions(
     for (entity, mut transform, _) in colliders.iter_mut() {
         if let Ok(mut velocity) = velocity_query.get_component_mut::<Velocity>(entity) {
             let drag = velocity.drag;
-            transform.translation = (transform.translation + velocity.linvel * delta).floor();
+            transform.translation = (transform.translation + velocity.linvel * delta).ceil();
             velocity.linvel.x -= velocity.linvel.x * drag.x * delta;
             velocity.linvel.y -= velocity.linvel.y * drag.y * delta;
         }
