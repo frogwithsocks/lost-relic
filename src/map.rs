@@ -3,8 +3,8 @@ use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
     collide::{Collider, ColliderKind},
-    tiled_loader::{TiledMap, TiledMapBundle},
     state::GameState,
+    tiled_loader::{TiledMap, TiledMapBundle}, Level,
 };
 
 pub const BLOCK_SIZE: f32 = 96.0;
@@ -24,8 +24,9 @@ impl Plugin for MapPlugin {
 #[derive(Component)]
 pub struct CellTower;
 
-pub fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let handle: Handle<TiledMap> = asset_server.load("test.tmx");
+pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res<AssetServer>) {
+    
+    let handle: Handle<TiledMap> = asset_server.load(format!("levels/{}.tmx", level.0).as_str());
 
     let map_entity = commands.spawn().id();
     commands.entity(map_entity).insert_bundle(TiledMapBundle {
@@ -42,5 +43,5 @@ pub fn spawn_map(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 pub fn despawn_map(mut commands: Commands, mut map_query: MapQuery) {
-    
+
 }

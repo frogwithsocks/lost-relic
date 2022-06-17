@@ -31,6 +31,7 @@ mod main_menu;
 mod state;
 mod slider;
 
+pub struct Level(u32);
 fn main() {
     App::new()
         .add_state(GameState::MainMenu)
@@ -49,7 +50,7 @@ fn main() {
         .add_plugin(MainMenuPlugin)
         .add_plugin(SliderPlugin)
         .insert_resource(ButtonRes(HashMap::new()))
-        .insert_resource(DoorRes(HashMap::new()))
+        .insert_resource(DoorRes(HashMap::new())).insert_resource(Level(0))
         .insert_resource(Msaa { samples: 1 })
         .add_startup_system(setup)
         .run();
