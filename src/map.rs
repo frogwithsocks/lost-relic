@@ -21,7 +21,7 @@ pub struct CellTower;
 
 pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res<AssetServer>) {
     
-    let handle: Handle<TiledMap> = asset_server.load(format!("{}.tmx", level.0).as_str());
+    let handle: Handle<TiledMap> = asset_server.load(format!("levels/{}.tmx", level.0).as_str());
 
     let map_entity = commands.spawn().id();
     commands.entity(map_entity).insert_bundle(TiledMapBundle {
