@@ -17,7 +17,7 @@ use crate::{
     player::{PlayerBundle, PlayerTexture},
     slider::Slider,
     state::GameState,
-    trigger::{Button, DoorRes, self},
+    trigger::{self, Button, DoorRes},
     velocity::{Gravity, Velocity},
     Level,
 };
@@ -29,6 +29,7 @@ impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
+            .add_startup_system(load_box_texture)
             .add_system_set(
                 SystemSet::on_update(GameState::Play)
                     .with_system(process_loaded_tile_maps.label("map_update"))
@@ -36,8 +37,6 @@ impl Plugin for TiledMapPlugin {
             );
     }
 }
-
-
 
 fn load_box_texture(
     asset_server: Res<AssetServer>,
@@ -50,6 +49,7 @@ fn load_box_texture(
 #[derive(Component)]
 pub struct WorldObject;
 
+#[derive(Clone)]
 pub struct BoxTexture(pub Handle<Image>);
 #[derive(Bundle)]
 pub struct BoxBundle {
@@ -59,6 +59,33 @@ pub struct BoxBundle {
     velocity: Velocity,
     gravity: Gravity,
     world_object: WorldObject,
+}
+
+impl BoxBundle {
+    fn new(transform: Transform, texture: Handle<Image>) -> Self {
+        Self {
+            sprite_bundle: SpriteBundle {
+                texture: texture.clone(),
+                transform,
+                sprite: Sprite {
+                    custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
+                    ..default()
+                },
+                ..default()
+            },
+            collider: Collider {
+                kind: ColliderKind::Movable(1.0),
+                size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                flags: 0,
+            },
+            gravity: Gravity::default(),
+            velocity: Velocity {
+                drag: Vec3::splat(10.0),
+                ..default()
+            },
+            world_object: WorldObject,
+        }
+    }
 }
 
 #[derive(TypeUuid)]
@@ -128,6 +155,7 @@ pub fn process_loaded_tile_maps(
     player_texture_res: Res<PlayerTexture>,
     mut door_res: ResMut<DoorRes>,
     level: Res<Level>,
+    box_texture: Res<BoxTexture>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -239,7 +267,7 @@ pub fn process_loaded_tile_maps(
                         let mut players: Vec<PlayerBundle> = vec![];
                         let mut cell_towers: Vec<Transform> = vec![];
                         let mut camera_anchors: Vec<Transform> = vec![];
-                        let mut boxes: Vec<Transform> = vec![];
+                        let mut boxes: Vec<BoxBundle> = vec![];
                         let mut doors: Vec<(Collider, Slider, Transform)> = vec![];
                         let mut buttons: Vec<(Collider, Button, Transform)> = vec![];
                         let mut exits: Vec<Transform> = vec![];
@@ -294,7 +322,10 @@ pub fn process_loaded_tile_maps(
                                                         player_texture_res.0.clone_weak(),
                                                     )),
                                                     31 => camera_anchors.push(default_transform),
-                                                    32 => boxes.push(default_transform),
+                                                    32 => boxes.push(BoxBundle::new(
+                                                        default_transform,
+                                                        box_texture.0.clone_weak(),
+                                                    )),
                                                     26 | 10 => (),
                                                     35 => colliders.push((
                                                         Collider {
@@ -384,29 +415,7 @@ pub fn process_loaded_tile_maps(
                                 .into_iter()
                                 .map(|v| (WorldObject, CameraAnchor, v)),
                         );
-                        let box_texture = asset_server.load("box.png");
-                        commands.spawn_batch(boxes.into_iter().map(move |v| BoxBundle {
-                            sprite_bundle: SpriteBundle {
-                                texture: box_texture.clone(),
-                                transform: v,
-                                sprite: Sprite {
-                                    custom_size: Some(Vec2::new(BLOCK_SIZE, BLOCK_SIZE)),
-                                    ..default()
-                                },
-                                ..default()
-                            },
-                            collider: Collider {
-                                kind: ColliderKind::Movable(1.0),
-                                size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                flags: 0,
-                            },
-                            gravity: Gravity::default(),
-                            velocity: Velocity {
-                                drag: Vec3::splat(10.0),
-                                ..default()
-                            },
-                            world_object: WorldObject,
-                        }));
+                        commands.spawn_batch(boxes);
 
                         commands.spawn_batch(exits.into_iter().map(|v| {
                             (
