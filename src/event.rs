@@ -11,7 +11,6 @@ use crate::{
     Level,
 };
 
-
 pub struct EventPlugin;
 
 impl Plugin for EventPlugin {
@@ -23,6 +22,30 @@ impl Plugin for EventPlugin {
                 .with_system(button_events)
                 .after("collision"),
         );
+    }
+}
+
+fn reset_buttons_and_doors(
+    mut buttons: Query<(&mut Collider, &mut Button)>,
+    mut doors: Query<(&mut Transform, &mut Collider, &mut Sprite, &mut Slider)>,
+    mut door_res: ResMut<DoorRes>,
+) {
+    for (_, button) in buttons.iter() {
+        door_res.0.get_mut(&button.door).unwrap().0 = 0;
+    }
+    for (mut collider, mut button) in buttons.iter_mut() {
+        collider.flags = 0;
+        button.pressed = false;
+        door_res.0.get_mut(&button.door).unwrap().0 += 1;
+    }
+    for (mut transform, mut collider, mut sprite, mut slider) in doors.iter_mut() {
+        slider.activated = false;
+        collider.size.y += slider.extent;
+        sprite.custom_size = sprite
+            .custom_size
+            .map(|size| Vec2::new(size.x, size.y + slider.extent));
+        transform.translation.y += slider.extent / 2.0;
+        slider.extent = 0.0;
     }
 }
 

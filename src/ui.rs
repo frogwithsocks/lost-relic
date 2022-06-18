@@ -10,10 +10,20 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(SystemSet::on_enter(GameState::Play).with_system(spawn_ui))
-            .add_system_set(SystemSet::on_update(GameState::Play).with_system(update_latency_text));
+        app.add_system(button_interaction)
+            .add_system_set(SystemSet::on_enter(GameState::Play).with_system(spawn_ui))
+            .add_system_set(SystemSet::on_update(GameState::Play).with_system(update_latency_text))
+            .add_system_set(
+                SystemSet::on_update(GameState::Play).with_system(pause_button_interaction),
+            );
     }
 }
+
+#[derive(Component)]
+pub struct UiButton;
+
+#[derive(Component)]
+struct PauseButton;
 
 #[derive(Component)]
 struct LatencyText;
@@ -74,6 +84,51 @@ fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 })
                 .insert(LatencyText);
         });
+
+    commands
+        .spawn_bundle(ButtonBundle {
+            style: Style {
+                size: Size::new(Val::Px(65.0), Val::Px(65.0)),
+                ..default()
+            },
+            image: UiImage(asset_server.load("pause_button.png")),
+            ..default()
+        })
+        .insert(UiButton)
+        .insert(PauseButton);
+}
+
+fn button_interaction(
+    mut interaction_query: Query<
+        (&Interaction, &mut UiColor),
+        (Changed<Interaction>, With<UiButton>),
+    >,
+) {
+    for (interaction, mut color) in interaction_query.iter_mut() {
+        match interaction {
+            Interaction::Hovered => {
+                *color = UiColor(Color::SILVER);
+            }
+            Interaction::None => {
+                *color = UiColor(Color::WHITE);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn pause_button_interaction(
+    mut state: ResMut<State<GameState>>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<PauseButton>)>,
+) {
+    for interaction in interaction_query.iter() {
+        match interaction {
+            Interaction::Clicked => {
+                state.push(GameState::Pause).unwrap();
+            }
+            _ => {}
+        }
+    }
 }
 
 fn update_latency_text(
