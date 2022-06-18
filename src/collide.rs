@@ -6,7 +6,7 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
-use crate::{map::BLOCK_SIZE, state::GameState, tiled_loader::TiledMap, velocity::Velocity};
+use crate::{map::BLOCK_SIZE, state::GameState, tiled_loader::TiledMap, velocity::Velocity, player::Player};
 
 pub struct CollidePlugin;
 
@@ -93,6 +93,7 @@ impl From<usize> for Axis {
 fn handle_collisions(
     mut events: EventWriter<GameEvent>,
     mut colliders: Query<(Entity, &mut Transform, &mut Collider)>,
+    mut player_entity: Query<Entity, With<Player>>,
     mut velocity_query: Query<&mut Velocity>,
     time: Res<Time>,
     assets: Res<Assets<TiledMap>>,
@@ -108,9 +109,13 @@ fn handle_collisions(
                 )
             })
             .unwrap_or((16.0 * BLOCK_SIZE, 16.0 * BLOCK_SIZE)),
-        Err(_) => return,
+        _ => return,
     };
 
+    let player_entity = match player_entity.get_single() {
+        Ok(e) => e,
+        _ => return,
+    };
     let mut partition = SpatialPartition::new(dimensions.0 as usize, dimensions.1 as usize);
     let solid: Vec<(Entity, &Transform, &Collider)> = colliders
         .iter()
@@ -203,7 +208,7 @@ fn handle_collisions(
                                 positions.insert(other_entity, (other_position, other_flags | of));
                             }
                             ColliderKind::Death => {
-                                events.send(GameEvent::Death);
+                                if entity == player_entity { events.send(GameEvent::Death); }
                             }
                             ColliderKind::Sensor => {
                                 positions.insert(other_entity, (other_position, other_flags | TOP));
@@ -304,7 +309,7 @@ fn handle_collisions(
                                 positions.insert(other_entity, (other_position, other_flags | of));
                             }
                             ColliderKind::Death => {
-                                events.send(GameEvent::Death);
+                                if entity == player_entity { events.send(GameEvent::Death); }
                             }
                             ColliderKind::Sensor => {
                                 positions.insert(other_entity, (other_position, other_flags | TOP));

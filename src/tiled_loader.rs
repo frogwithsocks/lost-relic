@@ -437,7 +437,8 @@ pub fn process_loaded_tile_maps(
                                     ..default()
                                 })
                                 .insert(collider)
-                                .insert(slider);
+                                .insert(slider)
+                                .insert(WorldObject);
                             door_res.0.insert(String::from("door1"), (0, entity));
                         }
                         for (collider, button, transform) in buttons {
@@ -447,7 +448,8 @@ pub fn process_loaded_tile_maps(
                                 .entity(entity)
                                 .insert(transform)
                                 .insert(collider)
-                                .insert(button);
+                                .insert(button)
+                                .insert(WorldObject);
                         }
                     }
                     first_gid += tileset.tilecount;

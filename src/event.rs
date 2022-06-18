@@ -82,9 +82,6 @@ fn handle_events(
     asset_server: Res<AssetServer>,
     mut level: ResMut<Level>,
     input: Res<Input<KeyCode>>,
-    mut buttons: Query<(&mut Collider, &mut Button)>,
-    mut doors: Query<(&mut Transform, &mut Collider, &mut Sprite, &mut Slider)>,
-    mut door_res: ResMut<DoorRes>,
 ) {
     let mut is_dead = false;
     let mut won = false;
@@ -101,7 +98,6 @@ fn handle_events(
             commands.entity(entity).despawn();
         }
         spawn_map(level, commands, asset_server);
-        reset_buttons_and_doors(buttons, doors, door_res);
         return;
     }
 
@@ -112,6 +108,5 @@ fn handle_events(
         }
         level.0 += 1;
         spawn_map(level, commands, asset_server);
-        reset_buttons_and_doors(buttons, doors, door_res);
     }
 }
