@@ -6,12 +6,7 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
-use crate::{
-    map::BLOCK_SIZE,
-    state::GameState,
-    tiled_loader::TiledMap,
-    velocity::{Velocity},
-};
+use crate::{map::BLOCK_SIZE, state::GameState, tiled_loader::TiledMap, velocity::Velocity};
 
 pub struct CollidePlugin;
 

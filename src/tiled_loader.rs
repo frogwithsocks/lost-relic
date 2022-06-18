@@ -2,11 +2,11 @@
 use std::{collections::HashMap, io::BufReader};
 
 use bevy::{
+    asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset},
     math::Vec2,
     prelude::*,
-    render::render_resource::TextureUsages,
-    asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset},
     reflect::TypeUuid,
+    render::render_resource::TextureUsages,
 };
 use bevy_ecs_tilemap::prelude::*;
 

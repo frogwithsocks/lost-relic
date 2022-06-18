@@ -38,4 +38,3 @@ pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res
         ..default()
     });
 }
-

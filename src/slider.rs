@@ -1,7 +1,4 @@
-use crate::{
-    collide::{Collider},
-    state::GameState,
-};
+use crate::{collide::Collider, state::GameState};
 use bevy::prelude::*;
 
 pub struct SliderPlugin;
