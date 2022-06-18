@@ -95,7 +95,7 @@ fn handle_events(
         }
     }
 
-    if is_dead {
+    if is_dead || input.just_pressed(KeyCode::R) {
         map_query.despawn(&mut commands, 0);
         for entity in entities.iter() {
             commands.entity(entity).despawn();

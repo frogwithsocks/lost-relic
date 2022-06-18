@@ -17,7 +17,7 @@ use crate::{
     player::{PlayerBundle, PlayerTexture},
     slider::Slider,
     state::GameState,
-    trigger::{Button, DoorRes},
+    trigger::{Button, DoorRes, self},
     velocity::{Gravity, Velocity},
     Level,
 };
@@ -37,9 +37,20 @@ impl Plugin for TiledMapPlugin {
     }
 }
 
+
+
+fn load_box_texture(
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut commands: Commands,
+) {
+    let texture = asset_server.load("box.png");
+    commands.insert_resource(BoxTexture(texture.clone()));
+}
 #[derive(Component)]
 pub struct WorldObject;
 
+pub struct BoxTexture(pub Handle<Image>);
 #[derive(Bundle)]
 pub struct BoxBundle {
     #[bundle]
@@ -317,7 +328,7 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Sensor,
                                                             flags: 0,
                                                         },
-                                                        Button {
+                                                        trigger::Button {
                                                             pressed: false,
                                                             door: String::from("door1"),
                                                         },
@@ -354,7 +365,6 @@ pub fn process_loaded_tile_maps(
                                 }
                             },
                         );
-                        let box_texture = asset_server.load("box.png");
                         commands.entity(layer_entity).insert(Transform::from_xyz(
                             offset_x,
                             -offset_y,
@@ -374,6 +384,7 @@ pub fn process_loaded_tile_maps(
                                 .into_iter()
                                 .map(|v| (WorldObject, CameraAnchor, v)),
                         );
+                        let box_texture = asset_server.load("box.png");
                         commands.spawn_batch(boxes.into_iter().map(move |v| BoxBundle {
                             sprite_bundle: SpriteBundle {
                                 texture: box_texture.clone(),
