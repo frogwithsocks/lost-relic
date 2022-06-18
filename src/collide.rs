@@ -278,7 +278,6 @@ fn handle_collisions(
                 let other_state = *positions.get(&other_entity).unwrap();
                 let mut other_position = other_state.0;
                 let other_flags = other_state.1;
-                //if other_size.y > 0.0 {
                 if let Some(collision) = collide(other_position, other_size, position, size) {
                     if matches!(collision, Collision::Right)
                         | matches!(collision, Collision::Left)
@@ -321,7 +320,6 @@ fn handle_collisions(
                         }
                     }
                 }
-                //}
             }
             positions.insert(entity, (position, flags));
         }

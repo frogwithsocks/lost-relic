@@ -43,22 +43,8 @@ fn build_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            color: UiColor(Color::BLUE),
+            image: UiImage(asset_server.load("h")),
             ..default()
-        })
-        .with_children(|parent| {
-            parent.spawn_bundle(TextBundle {
-                text: Text::with_section(
-                    "Play",
-                    TextStyle {
-                        font: asset_server.load("VT323-Regular.ttf"),
-                        font_size: 40.0,
-                        color: Color::rgb(0.9, 0.9, 0.9),
-                    },
-                    Default::default(),
-                ),
-                ..default()
-            });
         })
         .insert(PlayButton);
 }
