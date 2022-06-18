@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
-    collide::{Collider, ColliderKind},
     state::GameState,
     tiled_loader::{TiledMap, TiledMapBundle},
     Level,

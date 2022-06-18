@@ -1,8 +1,6 @@
 use crate::{
-    collide::{Collider, ColliderKind, TOP},
-    map::BLOCK_SIZE,
+    collide::{Collider},
     state::GameState,
-    velocity::Velocity,
 };
 use bevy::prelude::*;
 

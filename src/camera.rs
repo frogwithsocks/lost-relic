@@ -1,5 +1,6 @@
-use crate::{player::Player, state::GameState};
 use bevy::{prelude::*, render::primitives::Frustum};
+
+use crate::{player::Player, state::GameState};
 
 pub struct CameraPlugin;
 

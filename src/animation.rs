@@ -1,5 +1,6 @@
-use crate::state::GameState;
 use bevy::prelude::*;
+
+use crate::state::GameState;
 
 pub struct AnimationPlugin;
 

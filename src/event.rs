@@ -1,13 +1,15 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::collide::{Collider, GameEvent, TOP};
-use crate::map::spawn_map;
-use crate::slider::Slider;
-use crate::state::GameState;
-use crate::tiled_loader::WorldObject;
-use crate::trigger::{Button, DoorRes};
-use crate::Level;
+use crate::{
+    collide::{Collider, GameEvent},
+    map::spawn_map,
+    slider::Slider,
+    state::GameState,
+    tiled_loader::WorldObject,
+    trigger::{Button, DoorRes},
+    Level,
+};
 
 
 pub struct EventPlugin;
@@ -37,13 +39,13 @@ fn button_events(
         };
         if collider.flags != 0 && !button.is_pressed() {
             entry.0 -= 1;
-            button.pressed = true;
+            button.toggle();
             if entry.0 == 0 {
                 door.activated = true;
             }
         } else if collider.flags == 0 && button.is_pressed() {
             entry.0 += 1;
-            button.pressed = false;
+            button.toggle();
             door.activated = false;
         }
     }
@@ -63,7 +65,6 @@ fn handle_events(
     for event in events.iter() {
         match event {
             GameEvent::Death => is_dead = true,
-            GameEvent::Sensor(e) => {}
             GameEvent::Win => won = true,
         }
     }

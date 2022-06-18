@@ -1,15 +1,16 @@
+use std::collections::{HashMap, HashSet};
+
 use bevy::{
     asset::Assets,
     prelude::*,
     sprite::collide_aabb::{collide, Collision},
 };
-use std::collections::{HashMap, HashSet};
 
 use crate::{
     map::BLOCK_SIZE,
     state::GameState,
     tiled_loader::TiledMap,
-    velocity::{Gravity, Velocity},
+    velocity::{Velocity},
 };
 
 pub struct CollidePlugin;
@@ -26,7 +27,6 @@ impl Plugin for CollidePlugin {
 
 #[derive(PartialEq, Eq)]
 pub enum GameEvent {
-    Sensor(Entity),
     Death,
     Win,
 }

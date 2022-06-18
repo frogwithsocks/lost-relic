@@ -88,7 +88,7 @@ fn update_latency_text(
     let mut image = image_query.single_mut();
     let player = match player_query.get_single_mut() {
         Ok(p) => p,
-        Err(e) => {
+        Err(_) => {
             image.0 = asset_server.load("wifi_1.png");
             text.sections[0].value = "NaNms".to_string();
             return;

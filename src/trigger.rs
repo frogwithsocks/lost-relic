@@ -1,5 +1,6 @@
-use bevy::prelude::*;
 use std::collections::HashMap;
+
+use bevy::prelude::*;
 
 pub struct DoorRes(pub HashMap<String, (usize, Entity)>);
 

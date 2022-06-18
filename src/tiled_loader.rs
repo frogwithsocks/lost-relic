@@ -1,24 +1,26 @@
 // https://github.com/StarArawn/bevy_ecs_tilemap/blob/main/examples/tiled/tiled.rs
-
-use bevy::math::Vec2;
-use bevy::prelude::*;
-use bevy::render::render_resource::TextureUsages;
-use bevy_ecs_tilemap::prelude::*;
-use std::path::PathBuf;
 use std::{collections::HashMap, io::BufReader};
 
-use bevy::asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset};
-use bevy::reflect::TypeUuid;
+use bevy::{
+    math::Vec2,
+    prelude::*,
+    render::render_resource::TextureUsages,
+    asset::{AssetLoader, AssetPath, BoxedFuture, LoadContext, LoadedAsset},
+    reflect::TypeUuid,
+};
+use bevy_ecs_tilemap::prelude::*;
 
-use crate::camera::CameraAnchor;
-use crate::collide::{Collider, ColliderKind};
-use crate::map::{CellTower, ExitDoor, BLOCK_SIZE};
-use crate::player::{PlayerBundle, PlayerTexture};
-use crate::slider::Slider;
-use crate::state::GameState;
-use crate::trigger::{Button, DoorRes};
-use crate::velocity::{Gravity, Velocity};
-use crate::Level;
+use crate::{
+    camera::CameraAnchor,
+    collide::{Collider, ColliderKind},
+    map::{CellTower, ExitDoor, BLOCK_SIZE},
+    player::{PlayerBundle, PlayerTexture},
+    slider::Slider,
+    state::GameState,
+    trigger::{Button, DoorRes},
+    velocity::{Gravity, Velocity},
+    Level,
+};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;

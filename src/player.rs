@@ -1,3 +1,7 @@
+use std::collections::VecDeque;
+
+use bevy::prelude::*;
+
 use crate::{
     animation::Animation,
     collide::{Collider, ColliderKind, BOTTOM},
@@ -6,9 +10,6 @@ use crate::{
     tiled_loader::WorldObject,
     velocity::{Gravity, Velocity},
 };
-
-use bevy::prelude::*;
-use std::collections::VecDeque;
 
 #[derive(Deref)]
 pub struct PlayerTexture(pub Handle<TextureAtlas>);
