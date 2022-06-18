@@ -1,9 +1,9 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, text::Text2dBounds};
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
     state::GameState,
-    tiled_loader::{TiledMap, TiledMapBundle},
+    tiled_loader::{TiledMap, TiledMapBundle, WorldObject},
     Level,
 };
 
@@ -37,4 +37,43 @@ pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res
         },
         ..default()
     });
+    let mut spawn = |text: &str| {
+        commands
+            .spawn_bundle(Text2dBundle {
+                text: Text::with_section(
+                    text,
+                    TextStyle {
+                        font: asset_server.load("VT323-Regular.ttf"),
+                        font_size: 50.0,
+                        color: Color::BLACK,
+                    },
+                    TextAlignment {
+                        vertical: VerticalAlign::Center,
+                        horizontal: HorizontalAlign::Center,
+                    },
+                ),
+                transform: Transform {
+                    translation: Vec3::new(6.0 * BLOCK_SIZE, 5.5 * BLOCK_SIZE, 5.0),
+                    ..default()
+                },
+                text_2d_bounds: Text2dBounds {
+                    // Wrap text in the rectangle
+                    size: Size {
+                        width: BLOCK_SIZE * 6.0,
+                        height: BLOCK_SIZE * 4.0,
+                    },
+                },
+                ..default()
+            })
+            .insert(WorldObject);
+    };
+
+    match level.0 {
+        0 => spawn("WASD to move"),
+        1 => spawn("Latency will delay your inputs.\nMove Carefully."),
+        4 => spawn("Press R to restart the level."),
+        8 => spawn("You win or something TODO fill in"),
+        _ => (),
+    };
+    //TODO add instructions to world
 }
