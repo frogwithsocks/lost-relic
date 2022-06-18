@@ -1871,6 +1871,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "bevy_ecs_tilemap",
+ "bitflags",
  "tiled",
 ]
 

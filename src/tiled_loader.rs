@@ -12,7 +12,7 @@ use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
     camera::CameraAnchor,
-    collide::{Collider, ColliderKind},
+    collide::{Collider, ColliderKind, CollisionFlags},
     map::{CellTower, ExitDoor, BLOCK_SIZE},
     player::{PlayerBundle, PlayerTexture},
     slider::Slider,
@@ -76,7 +76,7 @@ impl BoxBundle {
             collider: Collider {
                 kind: ColliderKind::Movable(1.0),
                 size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                flags: 0,
+                flags: CollisionFlags::empty(),
             },
             gravity: Gravity::default(),
             velocity: Velocity {
@@ -333,7 +333,7 @@ pub fn process_loaded_tile_maps(
                                                                 BLOCK_SIZE / 5.0,
                                                             ),
                                                             kind: ColliderKind::Death,
-                                                            flags: 0,
+                                                            flags: CollisionFlags::empty(),
                                                         },
                                                         default_transform,
                                                     )),
@@ -342,7 +342,7 @@ pub fn process_loaded_tile_maps(
                                                         Collider {
                                                             size: Vec2::splat(BLOCK_SIZE),
                                                             kind: ColliderKind::Movable(900.0),
-                                                            flags: 0,
+                                                            flags: CollisionFlags::empty(),
                                                         },
                                                         Slider {
                                                             activated: false,
@@ -354,7 +354,7 @@ pub fn process_loaded_tile_maps(
                                                         Collider {
                                                             size: Vec2::splat(BLOCK_SIZE),
                                                             kind: ColliderKind::Sensor,
-                                                            flags: 0,
+                                                            flags: CollisionFlags::empty(),
                                                         },
                                                         trigger::Button {
                                                             pressed: false,
@@ -369,7 +369,7 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Movable(
                                                                 f32::INFINITY,
                                                             ),
-                                                            flags: 0,
+                                                            flags: CollisionFlags::empty(),
                                                         },
                                                         default_transform,
                                                     )),
@@ -421,7 +421,7 @@ pub fn process_loaded_tile_maps(
                                 v,
                                 Collider {
                                     kind: ColliderKind::Win,
-                                    flags: 0,
+                                    flags: CollisionFlags::empty(),
                                     size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
                                 },
                             )

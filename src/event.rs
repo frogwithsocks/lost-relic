@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
-    collide::{Collider, GameEvent},
+    collide::{Collider, GameEvent, CollisionFlags},
     map::spawn_map,
     slider::Slider,
     state::GameState,
@@ -36,13 +36,13 @@ fn button_events(
             Ok(door) => door,
             _ => return,
         };
-        if collider.flags != 0 && !button.is_pressed() {
+        if collider.flags != CollisionFlags::empty() && !button.is_pressed() {
             entry.0 -= 1;
             button.toggle();
             if entry.0 == 0 {
                 door.activated = true;
             }
-        } else if collider.flags == 0 && button.is_pressed() {
+        } else if collider.flags == CollisionFlags::empty() && button.is_pressed() {
             entry.0 += 1;
             button.toggle();
             door.activated = false;

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::{
     animation::Animation,
-    collide::{Collider, ColliderKind, BOTTOM},
+    collide::{Collider, ColliderKind, CollisionFlags},
     map::{CellTower, BLOCK_SIZE},
     state::GameState,
     tiled_loader::WorldObject,
@@ -61,7 +61,7 @@ impl PlayerBundle {
             collider: Collider {
                 kind: ColliderKind::Movable(5.0),
                 size: Vec2::new(22.0 / 32.0 * BLOCK_SIZE, BLOCK_SIZE),
-                flags: 0,
+                flags: CollisionFlags::empty(),
             },
             velocity: Velocity {
                 drag: Vec3::new(20.0, 5.0, 0.0),
@@ -160,7 +160,7 @@ fn update_player(
         for input in inputs {
             match input {
                 GameInput::Jump => {
-                    if collider.flags & BOTTOM != 0 {
+                    if collider.flags.contains(CollisionFlags::Bottom) {
                         velocity.linvel += Vec3::Y * 2300.0;
                     }
                 }
