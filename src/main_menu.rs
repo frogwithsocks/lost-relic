@@ -19,13 +19,17 @@ struct PlayButton;
 
 fn interaction_system(
     mut state: ResMut<State<GameState>>,
-    interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<(&Interaction, &mut UiColor), (Changed<Interaction>, With<Button>)>,
 ) {
-    for interaction in interaction_query.iter() {
+    for (interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => state.set(GameState::Play).unwrap(),
-            Interaction::Hovered => {}
-            Interaction::None => {}
+            Interaction::Hovered => {
+                *color = UiColor(Color::SILVER);
+            }
+            Interaction::None => {
+                *color = UiColor(Color::WHITE);
+            }
         }
     }
 }
@@ -43,7 +47,7 @@ fn build_main_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
                 align_items: AlignItems::Center,
                 ..default()
             },
-            image: UiImage(asset_server.load("h")),
+            image: UiImage(asset_server.load("play_button.png")),
             ..default()
         })
         .insert(PlayButton);
