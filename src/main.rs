@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 
 use animation::AnimationPlugin;
-use bevy::prelude::*;
+use bevy::{prelude::*, window::WindowMode};
 use bevy_ecs_tilemap::TilemapPlugin;
 use camera::CameraPlugin;
 use collide::{CollidePlugin, GameEvent};
@@ -34,6 +34,12 @@ mod velocity;
 pub struct Level(u32);
 fn main() {
     App::new()
+    .insert_resource(WindowDescriptor {
+        title: String::from("Connection Severed"),
+        resizable: false,
+        mode: WindowMode::BorderlessFullscreen,
+        ..default()
+    })
         .add_state(GameState::MainMenu)
         .add_plugins(DefaultPlugins)
         .add_event::<GameEvent>()
