@@ -10,15 +10,8 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                SystemSet::on_enter(GameState::Play)
-                    .with_system(spawn_ui)
-            )
-            .add_system_set(
-                SystemSet::on_update(GameState::Play)
-                    .with_system(update_latency_text)
-            );
+        app.add_system_set(SystemSet::on_enter(GameState::Play).with_system(spawn_ui))
+            .add_system_set(SystemSet::on_update(GameState::Play).with_system(update_latency_text));
     }
 }
 

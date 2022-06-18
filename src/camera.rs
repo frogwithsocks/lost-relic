@@ -1,18 +1,11 @@
-use crate::{
-    player::Player,
-    state::GameState,
-};
+use crate::{player::Player, state::GameState};
 use bevy::{prelude::*, render::primitives::Frustum};
 
 pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                SystemSet::on_update(GameState::Play)
-                    .with_system(move_camera)
-            );
+        app.add_system_set(SystemSet::on_update(GameState::Play).with_system(move_camera));
     }
 }
 

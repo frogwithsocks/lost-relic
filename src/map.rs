@@ -4,7 +4,8 @@ use bevy_ecs_tilemap::prelude::*;
 use crate::{
     collide::{Collider, ColliderKind},
     state::GameState,
-    tiled_loader::{TiledMap, TiledMapBundle}, Level,
+    tiled_loader::{TiledMap, TiledMapBundle},
+    Level,
 };
 
 pub const BLOCK_SIZE: f32 = 96.0;
@@ -13,11 +14,7 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                SystemSet::on_enter(GameState::Play)
-                    .with_system(spawn_map)
-            );
+        app.add_system_set(SystemSet::on_enter(GameState::Play).with_system(spawn_map));
     }
 }
 
@@ -38,9 +35,6 @@ pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res
         },
         ..default()
     });
-
 }
 
-pub fn despawn_map(mut commands: Commands, mut map_query: MapQuery) {
-
-}
+pub fn despawn_map(mut commands: Commands, mut map_query: MapQuery) {}

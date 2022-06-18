@@ -1,34 +1,30 @@
-use bevy::prelude::*;
 use crate::state::GameState;
+use bevy::prelude::*;
 
 pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::MainMenu)
-                .with_system(build_main_menu)
-        )
-        .add_system_set(
-            SystemSet::on_update(GameState::MainMenu)
-                .with_system(interaction_system)
-        )
-        .add_system_set(
-            SystemSet::on_exit(GameState::MainMenu)
-                .with_system(destroy_main_menu)
-        );
+        app.add_system_set(SystemSet::on_enter(GameState::MainMenu).with_system(build_main_menu))
+            .add_system_set(
+                SystemSet::on_update(GameState::MainMenu).with_system(interaction_system),
+            )
+            .add_system_set(SystemSet::on_exit(GameState::MainMenu).with_system(destroy_main_menu));
     }
 }
 
 #[derive(Component)]
 struct PlayButton;
 
-fn interaction_system(mut state: ResMut<State<GameState>>, interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>) {
+fn interaction_system(
+    mut state: ResMut<State<GameState>>,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+) {
     for interaction in interaction_query.iter() {
         match *interaction {
             Interaction::Clicked => state.set(GameState::Play).unwrap(),
-            Interaction::Hovered => {},
-            Interaction::None => {},
+            Interaction::Hovered => {}
+            Interaction::None => {}
         }
     }
 }

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
 use bevy::prelude::*;
+use std::collections::HashMap;
 
 pub struct DoorRes(pub HashMap<String, (usize, Entity)>);
 
 #[derive(Component)]
 pub struct Button {
-    pressed: bool,
+    pub pressed: bool,
     pub door: String,
 }
 

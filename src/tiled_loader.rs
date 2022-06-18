@@ -14,21 +14,22 @@ use crate::camera::CameraAnchor;
 use crate::collide::{Collider, ColliderKind};
 use crate::map::{CellTower, BLOCK_SIZE};
 use crate::player::{PlayerBundle, PlayerTexture};
-use crate::velocity::{Gravity, Velocity};
+use crate::slider::Slider;
 use crate::state::GameState;
+use crate::trigger::{Button, DoorRes};
+use crate::velocity::{Gravity, Velocity};
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
 
 impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_asset::<TiledMap>()
+        app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
             .add_system_set(
                 SystemSet::on_update(GameState::Play)
                     .with_system(process_loaded_tile_maps.label("map_update"))
-                    .with_system(set_texture_filters_to_nearest)
+                    .with_system(set_texture_filters_to_nearest),
             );
     }
 }
@@ -111,6 +112,7 @@ pub fn process_loaded_tile_maps(
     layer_query: Query<&Layer>,
     chunk_query: Query<&Chunk>,
     player_texture_res: Res<PlayerTexture>,
+    mut door_res: ResMut<DoorRes>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -222,6 +224,8 @@ pub fn process_loaded_tile_maps(
                         let mut cell_towers: Vec<Transform> = vec![];
                         let mut camera_anchors: Vec<Transform> = vec![];
                         let mut boxes: Vec<Transform> = vec![];
+                        let mut doors: Vec<(Collider, Slider, Transform)> = vec![];
+                        let mut buttons: Vec<(Collider, Button, Transform)> = vec![];
 
                         let layer_entity = LayerBuilder::<TileBundle>::new_batch(
                             &mut commands,
@@ -286,10 +290,39 @@ pub fn process_loaded_tile_maps(
                                                         },
                                                         default_transform,
                                                     )),
+                                                    // 33 is door
+                                                    33 => doors.push((
+                                                        Collider {
+                                                            size: Vec2::splat(BLOCK_SIZE),
+                                                            kind: ColliderKind::Movable(900.0),
+                                                            flags: 0,
+                                                        },
+                                                        Slider {
+                                                            max_compress: BLOCK_SIZE,
+                                                            change: 1.0,
+                                                            ..default()
+                                                        },
+                                                        default_transform,
+                                                    )),
+                                                    // 34 is button
+                                                    34 => buttons.push((
+                                                        Collider {
+                                                            size: Vec2::splat(BLOCK_SIZE),
+                                                            kind: ColliderKind::Sensor,
+                                                            flags: 0,
+                                                        },
+                                                        Button {
+                                                            pressed: false,
+                                                            door: String::from("door1"),
+                                                        },
+                                                        default_transform,
+                                                    )),
                                                     _ => colliders.push((
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                                                            kind: ColliderKind::Movable(f32::INFINITY),
+                                                            kind: ColliderKind::Movable(
+                                                                f32::INFINITY,
+                                                            ),
                                                             flags: 0,
                                                         },
                                                         default_transform,
@@ -356,6 +389,34 @@ pub fn process_loaded_tile_maps(
                             },
                             world_object: WorldObject,
                         }));
+                        for (collider, slider, mut transform) in doors {
+                            let entity = commands.spawn().id();
+                            let size = collider.size;
+                            transform.translation.z = 100.0;
+                            commands
+                                .entity(entity)
+                                .insert_bundle(SpriteBundle {
+                                    sprite: Sprite {
+                                        custom_size: Some(size),
+                                        color: Color::BLUE,
+                                        ..default()
+                                    },
+                                    transform,
+                                    ..default()
+                                })
+                                .insert(collider)
+                                .insert(slider);
+                            door_res.0.insert(String::from("door1"), (0, entity));
+                        }
+                        for (collider, button, transform) in buttons {
+                            let entity = commands.spawn().id();
+                            door_res.0.get_mut(&button.door).unwrap().0 += 1;
+                            commands
+                                .entity(entity)
+                                .insert(transform)
+                                .insert(collider)
+                                .insert(button);
+                        }
                     }
                     first_gid += tileset.tilecount;
                 }

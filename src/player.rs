@@ -2,8 +2,9 @@ use crate::{
     animation::Animation,
     collide::{Collider, ColliderKind, BOTTOM},
     map::{CellTower, BLOCK_SIZE},
-    velocity::{Gravity, Velocity}, tiled_loader::WorldObject,
     state::GameState,
+    tiled_loader::WorldObject,
+    velocity::{Gravity, Velocity},
 };
 
 use bevy::prelude::*;
@@ -18,17 +19,12 @@ pub struct Latency(pub VecDeque<i32>);
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                SystemSet::on_enter(GameState::Play)
-                    .with_system(load_player_resources)
-            )
+        app.add_system_set(SystemSet::on_enter(GameState::Play).with_system(load_player_resources))
             .add_system_set(
                 SystemSet::on_update(GameState::Play)
                     .with_system(player_inputs)
                     .with_system(update_player)
-                    .with_system(update_latency.after(player_inputs))
-                    //.with_system(_print_player_inputs.after("map_update"))
+                    .with_system(update_latency.after(player_inputs)), //.with_system(_print_player_inputs.after("map_update"))
             );
     }
 }

@@ -1,34 +1,49 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::Level;
 use crate::collide::{Collider, GameEvent, TOP};
 use crate::map::spawn_map;
+use crate::slider::Slider;
 use crate::state::GameState;
 use crate::tiled_loader::WorldObject;
 use crate::trigger::{Button, DoorRes};
-use crate::slider::Slider;
+use crate::Level;
 
 pub struct EventPlugin;
 
 impl Plugin for EventPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(
-                SystemSet::on_update(GameState::Play)
-                    .with_system(handle_events)
-                    .after("collision")
-            );
+        app.add_system_set(
+            SystemSet::on_update(GameState::Play)
+                .with_system(handle_events)
+                .after("collision")
+                .with_system(button_events)
+                .after("collision"),
+        );
     }
 }
 
 fn button_events(
-    mut events: EventWriter<GameEvent>,
-    buttons: Query<(Entity, &Collider, &Button)>
+    mut buttons: Query<(&Collider, &mut Button)>,
+    mut doors: Query<&mut Slider>,
+    mut door_res: ResMut<DoorRes>,
 ) {
-    for (entity, collider, button) in buttons.iter() {
-        if collider.flags & TOP != 0 {
-            events.send(GameEvent::Sensor(entity));
+    for (collider, mut button) in buttons.iter_mut() {
+        let mut entry = door_res.0.get_mut(&button.door).unwrap();
+        let mut door = match doors.get_component_mut::<Slider>(entry.1) {
+            Ok(door) => door,
+            _ => return,
+        };
+        if collider.flags != 0 && !button.is_pressed() {
+            entry.0 -= 1;
+            button.pressed = true;
+            if entry.0 == 0 {
+                door.activated = true;
+            }
+        } else if collider.flags == 0 && button.is_pressed() {
+            entry.0 += 1;
+            button.pressed = false;
+            door.activated = false;
         }
     }
 }
@@ -36,33 +51,18 @@ fn button_events(
 fn handle_events(
     mut commands: Commands,
     mut events: EventReader<GameEvent>,
-    mut buttons: Query<&mut Button>,
-    mut doors: Query<&mut Slider>,
-    mut door_map: ResMut<DoorRes>,
     mut map_query: MapQuery,
     entities: Query<Entity, With<WorldObject>>,
     asset_server: Res<AssetServer>,
     mut level: ResMut<Level>,
-    input :Res<Input<KeyCode>>
+    input: Res<Input<KeyCode>>,
 ) {
     let mut is_dead = false;
     let mut won = false;
     for event in events.iter() {
         match event {
             GameEvent::Death => is_dead = true,
-            GameEvent::Sensor(e) => {
-                if let Ok(mut button) = buttons.get_component_mut::<Button>(*e) {
-                    let (press, door_entity) = door_map.0.get_mut(&button.door).unwrap();
-                    button.toggle();
-                    *press -= button.is_pressed() as usize;
-                    let mut door = doors.get_component_mut::<Slider>(*door_entity).unwrap();
-                    if *press == 0 {
-                        door.activated = true;
-                    } else {
-                        door.activated = false;
-                    }
-                }
-            }
+            GameEvent::Sensor(e) => {}
             GameEvent::Win => won = true,
         }
     }
@@ -76,7 +76,7 @@ fn handle_events(
         return;
     }
 
-    if won || input.just_pressed(KeyCode::L)  {
+    if won || input.just_pressed(KeyCode::L) {
         map_query.despawn(&mut commands, 0);
         for entity in entities.iter() {
             commands.entity(entity).despawn();
