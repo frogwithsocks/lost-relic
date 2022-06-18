@@ -384,7 +384,7 @@ pub fn process_loaded_tile_maps(
                                                 ..default()
                                             };
                                             match gid {
-                                                27 | 32 => None,
+                                                27 | 32 | 33 => None,
                                                 _ => Some(TileBundle { tile, ..default() }),
                                             }
                                         })
