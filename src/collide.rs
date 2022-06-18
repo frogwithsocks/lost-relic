@@ -43,6 +43,7 @@ pub enum ColliderKind {
     Movable(f32),
     Death,
     Sensor,
+    Win,
 }
 
 impl Default for ColliderKind {
@@ -64,6 +65,7 @@ impl Collider {
             ColliderKind::Movable(w) => w,
             ColliderKind::Death => f32::INFINITY,
             ColliderKind::Sensor => f32::MAX,
+            ColliderKind::Win => f32::MAX,
         }
     }
 }
@@ -211,6 +213,9 @@ fn handle_collisions(
                             ColliderKind::Sensor => {
                                 positions.insert(other_entity, (other_position, other_flags | TOP));
                             }
+                            ColliderKind::Win => {
+                                events.send(GameEvent::Win);
+                            }
                         }
                     }
                 }
@@ -309,6 +314,9 @@ fn handle_collisions(
                             }
                             ColliderKind::Sensor => {
                                 positions.insert(other_entity, (other_position, other_flags | TOP));
+                            }
+                            ColliderKind::Win => {
+                                events.send(GameEvent::Win);
                             }
                         }
                     }

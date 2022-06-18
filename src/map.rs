@@ -19,6 +19,9 @@ impl Plugin for MapPlugin {
 }
 
 #[derive(Component)]
+pub struct ExitDoor;
+
+#[derive(Component)]
 pub struct CellTower;
 
 pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -37,4 +40,3 @@ pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res
     });
 }
 
-pub fn despawn_map(mut commands: Commands, mut map_query: MapQuery) {}

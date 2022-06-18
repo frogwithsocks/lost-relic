@@ -12,7 +12,7 @@ use bevy::reflect::TypeUuid;
 
 use crate::camera::CameraAnchor;
 use crate::collide::{Collider, ColliderKind};
-use crate::map::{CellTower, BLOCK_SIZE};
+use crate::map::{CellTower, ExitDoor, BLOCK_SIZE};
 use crate::player::{PlayerBundle, PlayerTexture};
 use crate::slider::Slider;
 use crate::state::GameState;
@@ -135,10 +135,10 @@ pub fn process_loaded_tile_maps(
     }
 
     // If we have new map entities add them to the changed_maps list.
-    for new_map_handle in new_maps.iter() {
-        changed_maps.push(new_map_handle.clone_weak());
-    }
-
+    // for new_map_handle in new_maps.iter() {
+    //     changed_maps.push(new_map_handle.clone_weak());
+    // }
+    println!("{:?}", changed_maps);
     for changed_map in changed_maps.iter() {
         for (_, map_handle, mut map) in query.iter_mut() {
             // only deal with currently changed map
@@ -226,6 +226,7 @@ pub fn process_loaded_tile_maps(
                         let mut boxes: Vec<Transform> = vec![];
                         let mut doors: Vec<(Collider, Slider, Transform)> = vec![];
                         let mut buttons: Vec<(Collider, Button, Transform)> = vec![];
+                        let mut exits: Vec<Transform> = vec![];
 
                         let layer_entity = LayerBuilder::<TileBundle>::new_batch(
                             &mut commands,
@@ -317,6 +318,7 @@ pub fn process_loaded_tile_maps(
                                                         },
                                                         default_transform,
                                                     )),
+                                                    36 => exits.push(default_transform),
                                                     _ => colliders.push((
                                                         Collider {
                                                             size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
@@ -389,6 +391,13 @@ pub fn process_loaded_tile_maps(
                             },
                             world_object: WorldObject,
                         }));
+
+                        commands.spawn_batch(exits.into_iter().map(|v| (WorldObject, ExitDoor, v, Collider {
+                            kind: ColliderKind::Win,
+                            flags: 0,
+                            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                        })));
+
                         for (collider, slider, mut transform) in doors {
                             let entity = commands.spawn().id();
                             let size = collider.size;

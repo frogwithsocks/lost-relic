@@ -9,6 +9,7 @@ use crate::tiled_loader::WorldObject;
 use crate::trigger::{Button, DoorRes};
 use crate::Level;
 
+
 pub struct EventPlugin;
 
 impl Plugin for EventPlugin {

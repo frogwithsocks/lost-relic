@@ -160,7 +160,7 @@ fn update_player(
             match input {
                 GameInput::Jump => {
                     if collider.flags & BOTTOM != 0 {
-                        velocity.linvel += Vec3::Y * 2200.0;
+                        velocity.linvel += Vec3::Y * 2300.0;
                     }
                 }
                 GameInput::Left => {
