@@ -60,9 +60,9 @@ pub struct BoxBundle {
     gravity: Gravity,
     world_object: WorldObject,
 }
-
 impl BoxBundle {
-    fn new(transform: Transform, texture: Handle<Image>) -> Self {
+    fn new(mut transform: Transform, texture: Handle<Image>) -> Self {
+        transform.translation.y = 9.0;
         Self {
             sprite_bundle: SpriteBundle {
                 texture: texture.clone(),
@@ -80,7 +80,7 @@ impl BoxBundle {
             },
             gravity: Gravity::default(),
             velocity: Velocity {
-                drag: Vec3::splat(1.0),
+                drag: Vec3::splat(10.0),
                 ..default()
             },
             world_object: WorldObject,
