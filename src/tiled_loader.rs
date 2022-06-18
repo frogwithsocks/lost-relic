@@ -80,7 +80,7 @@ impl BoxBundle {
             },
             gravity: Gravity::default(),
             velocity: Velocity {
-                drag: Vec3::splat(10.0),
+                drag: Vec3::splat(1.0),
                 ..default()
             },
             world_object: WorldObject,
@@ -143,7 +143,6 @@ impl AssetLoader for TiledLoader {
 }
 
 pub fn process_loaded_tile_maps(
-    asset_server: Res<AssetServer>,
     mut commands: Commands,
     mut map_events: EventReader<AssetEvent<TiledMap>>,
     maps: Res<Assets<TiledMap>>,
@@ -331,7 +330,7 @@ pub fn process_loaded_tile_maps(
                                                         Collider {
                                                             size: Vec2::new(
                                                                 BLOCK_SIZE / 1.25,
-                                                                BLOCK_SIZE / 2.0,
+                                                                BLOCK_SIZE / 5.0,
                                                             ),
                                                             kind: ColliderKind::Death,
                                                             flags: 0,
@@ -347,7 +346,7 @@ pub fn process_loaded_tile_maps(
                                                         },
                                                         Slider {
                                                             max_compress: BLOCK_SIZE,
-                                                            change: 1.0,
+                                                            change: 10.0,
                                                             ..default()
                                                         },
                                                         default_transform,
