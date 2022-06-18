@@ -39,6 +39,7 @@ pub enum ColliderKind {
     Death,
     Sensor,
     Win,
+    None,
 }
 
 impl Default for ColliderKind {
@@ -61,6 +62,7 @@ impl Collider {
             ColliderKind::Death => f32::INFINITY,
             ColliderKind::Sensor => f32::MAX,
             ColliderKind::Win => f32::MAX,
+            ColliderKind::None => 0.0,
         }
     }
 }
@@ -182,6 +184,8 @@ fn handle_collisions(
                         | matches!(collision, Collision::Bottom)
                         | matches!(collision, Collision::Inside)
                     {
+                        println!("player: {:?}", player_entity);
+                        println!("{:?} collided with {:?}", entity, other_entity);
                         match other_collider.kind {
                             ColliderKind::Movable(other_weight) => {
                                 let push = push_force(
@@ -193,19 +197,26 @@ fn handle_collisions(
                                 );
                                 let f = flag(&collision);
                                 let of = opposite(f);
-                                flags |= f;
-                                if (collider.weight() <= other_weight && flags & of == 0)
+                                println!("f: {:b}, of: {:b}", f, of);
+                                println!("flags: {:b}, other_flags: {:b}", flags, other_flags);
+                                println!("weight: {}, other_weight: {}", collider.weight(), other_weight);
+                                if (collider.weight() < other_weight && flags & of == 0)
                                     || other_flags & f != 0
                                 {
+                                    println!("pushing self");
+                                    flags |= f;
                                     position += push;
                                     again.insert(entity);
                                     update_velocity.insert(entity);
+                                    println!("{:b}, {:b}", other_flags, other_flags & (!of));
+                                    positions.insert(other_entity, (other_position, other_flags & (!of)));
                                 } else {
+                                    println!("pushing other");
                                     other_position -= push;
                                     again.insert(other_entity);
                                     update_velocity.insert(other_entity);
+                                    positions.insert(other_entity, (other_position, other_flags | of));
                                 }
-                                positions.insert(other_entity, (other_position, other_flags | of));
                             }
                             ColliderKind::Death => {
                                 if entity == player_entity { events.send(GameEvent::Death); }
@@ -216,6 +227,7 @@ fn handle_collisions(
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
                             }
+                            _ => {},
                         }
                     }
                 }
@@ -317,6 +329,7 @@ fn handle_collisions(
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
                             }
+                            _ => {},
                         }
                     }
                 }

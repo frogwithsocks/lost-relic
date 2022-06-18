@@ -345,9 +345,7 @@ pub fn process_loaded_tile_maps(
                                                             flags: 0,
                                                         },
                                                         Slider {
-                                                            max_compress: BLOCK_SIZE,
-                                                            change: 10.0,
-                                                            ..default()
+                                                            activated: false,
                                                         },
                                                         default_transform,
                                                     )),

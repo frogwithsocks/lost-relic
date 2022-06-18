@@ -1,4 +1,4 @@
-use crate::{collide::Collider, state::GameState};
+use crate::{collide::{Collider, ColliderKind}, state::GameState};
 use bevy::prelude::*;
 
 pub struct SliderPlugin;
@@ -16,31 +16,17 @@ impl Plugin for SliderPlugin {
 #[derive(Component, Default)]
 pub struct Slider {
     pub activated: bool,
-    pub extent: f32,
-    pub max_compress: f32,
-    pub change: f32,
 }
 
 fn update_slider_collider(
-    mut sliders: Query<(&mut Transform, &mut Collider, &mut Sprite, &mut Slider)>,
+    mut sliders: Query<(&mut Collider, &Slider, &mut Visibility)>,
 ) {
-    for (mut transform, mut collider, mut sprite, mut slider) in sliders.iter_mut() {
-        if slider.activated && slider.extent != slider.max_compress + slider.change {
-            collider.size.y -= slider.change;
-            sprite.custom_size = sprite
-                .custom_size
-                .map(|size| Vec2::new(size.x, (size.y - slider.change).max(0.0)));
-            transform.translation.y -= slider.change / 2.0;
-            slider.extent += slider.change;
+    for (mut collider, slider, mut visibility) in sliders.iter_mut() {
+        visibility.is_visible = !slider.activated;
+        if slider.activated {
+            collider.kind = ColliderKind::None;
         } else {
-            if slider.extent != 0.0 {
-                collider.size.y += slider.change;
-                sprite.custom_size = sprite
-                    .custom_size
-                    .map(|size| Vec2::new(size.x, (size.y + slider.change).max(0.0)));
-                transform.translation.y += slider.change / 2.0;
-                slider.extent -= slider.change;
-            }
+            collider.kind = ColliderKind::Movable(f32::INFINITY);
         }
     }
 }
