@@ -18,6 +18,7 @@ use crate::slider::Slider;
 use crate::state::GameState;
 use crate::trigger::{Button, DoorRes};
 use crate::velocity::{Gravity, Velocity};
+use crate::Level;
 
 #[derive(Default)]
 pub struct TiledMapPlugin;
@@ -113,12 +114,15 @@ pub fn process_loaded_tile_maps(
     chunk_query: Query<&Chunk>,
     player_texture_res: Res<PlayerTexture>,
     mut door_res: ResMut<DoorRes>,
+    level: Res<Level>,
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
         match event {
             AssetEvent::Created { handle } => {
-                changed_maps.push(handle.clone());
+                if level.0 == 0 {
+                    changed_maps.push(handle.clone());
+                };
             }
             AssetEvent::Modified { handle } => {
                 changed_maps.push(handle.clone());
@@ -135,10 +139,9 @@ pub fn process_loaded_tile_maps(
     }
 
     // If we have new map entities add them to the changed_maps list.
-    // for new_map_handle in new_maps.iter() {
-    //     changed_maps.push(new_map_handle.clone_weak());
-    // }
-    println!("{:?}", changed_maps);
+    for new_map_handle in new_maps.iter() {
+        changed_maps.push(new_map_handle.clone_weak());
+    }
     for changed_map in changed_maps.iter() {
         for (_, map_handle, mut map) in query.iter_mut() {
             // only deal with currently changed map
@@ -392,11 +395,18 @@ pub fn process_loaded_tile_maps(
                             world_object: WorldObject,
                         }));
 
-                        commands.spawn_batch(exits.into_iter().map(|v| (WorldObject, ExitDoor, v, Collider {
-                            kind: ColliderKind::Win,
-                            flags: 0,
-                            size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
-                        })));
+                        commands.spawn_batch(exits.into_iter().map(|v| {
+                            (
+                                WorldObject,
+                                ExitDoor,
+                                v,
+                                Collider {
+                                    kind: ColliderKind::Win,
+                                    flags: 0,
+                                    size: Vec2::new(BLOCK_SIZE, BLOCK_SIZE),
+                                },
+                            )
+                        }));
 
                         for (collider, slider, mut transform) in doors {
                             let entity = commands.spawn().id();
