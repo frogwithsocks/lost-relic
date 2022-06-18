@@ -34,14 +34,14 @@ mod velocity;
 pub struct Level(u32);
 fn main() {
     App::new()
-        .add_state(GameState::MainMenu)
-        .add_plugins(DefaultPlugins)
         .insert_resource(WindowDescriptor {
             title: String::from("Connection Severed"),
             resizable: false,
             mode: WindowMode::BorderlessFullscreen,
             ..default()
         })
+        .add_state(GameState::MainMenu)
+        .add_plugins(DefaultPlugins)
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_event::<GameEvent>()
         .add_plugin(TilemapPlugin)
