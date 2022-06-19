@@ -126,7 +126,7 @@ fn player_inputs(keyboard_input: Res<Input<KeyCode>>, mut player_query: Query<&m
                 _ => None,
             })
             .collect();
-        if inputs.len() > 0 {
+        if !inputs.is_empty() {
             if player.queue.len() < latency + 1 {
                 player.queue.resize(latency + 1, vec![]);
             }
