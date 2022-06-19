@@ -96,7 +96,7 @@ impl From<usize> for Axis {
 fn handle_collisions(
     mut events: EventWriter<GameEvent>,
     mut colliders: Query<(Entity, &mut Transform, &mut Collider)>,
-    mut player_entity: Query<Entity, With<Player>>,
+    player_entity: Query<Entity, With<Player>>,
     mut velocity_query: Query<&mut Velocity>,
     time: Res<Time>,
     assets: Res<Assets<TiledMap>>,
@@ -254,7 +254,7 @@ fn handle_collisions(
                                 if entity == player_entity { events.send(GameEvent::Death); }
                             }
                             ColliderKind::Sensor => {
-                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::Top));
+                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::TOP));
                             }
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
@@ -400,7 +400,7 @@ fn handle_collisions(
                                 if entity == player_entity { events.send(GameEvent::Death); }
                             }
                             ColliderKind::Sensor => {
-                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::Top));
+                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::TOP));
                             }
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
@@ -445,14 +445,14 @@ fn handle_collisions(
 
 bitflags! {
     pub struct CollisionFlags: u8 {
-        const Top        = 1 << 3;
-        const Bottom     = 1 << 0;
-        const Right      = 1 << 2;
-        const Left       = 1 << 1;
-        const TopLock    = 1 << 7;
-        const BottomLock = 1 << 4;
-        const RightLock  = 1 << 6;
-        const LeftLock   = 1 << 5;
+        const TOP        = 1 << 3;
+        const BOTTOM     = 1 << 0;
+        const RIGHT      = 1 << 2;
+        const LEFT       = 1 << 1;
+        const TOPLOCK    = 1 << 7;
+        const BOTTOMLOCK = 1 << 4;
+        const RIGHTLOCK  = 1 << 6;
+        const LEFTLOCK   = 1 << 5;
     }
 }
 
@@ -484,10 +484,10 @@ impl CollisionFlags {
 impl From<Collision> for CollisionFlags {
     fn from(collision: Collision) -> Self {
         match collision {
-            Collision::Top | Collision::Inside => Self::Top,
-            Collision::Bottom => Self::Bottom,
-            Collision::Right => Self::Right,
-            Collision::Left => Self::Left,
+            Collision::Top | Collision::Inside => Self::TOP,
+            Collision::Bottom => Self::BOTTOM,
+            Collision::Right => Self::RIGHT,
+            Collision::Left => Self::LEFT,
         }
     }
 }

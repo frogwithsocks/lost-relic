@@ -40,7 +40,6 @@ impl Plugin for TiledMapPlugin {
 
 fn load_box_texture(
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut commands: Commands,
 ) {
     let texture = asset_server.load("box.png");

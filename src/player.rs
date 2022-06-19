@@ -160,7 +160,7 @@ fn update_player(
         for input in inputs {
             match input {
                 GameInput::Jump => {
-                    if collider.flags.contains(CollisionFlags::Bottom) {
+                    if collider.flags.contains(CollisionFlags::BOTTOM) {
                         velocity.linvel += Vec3::Y * 2300.0;
                     }
                 }
