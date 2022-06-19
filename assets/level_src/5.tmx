@@ -9,6 +9,7 @@
  <tileset firstgid="34" source="../tilesets/button.tsx"/>
  <tileset firstgid="35" source="../tilesets/spikes.tsx"/>
  <tileset firstgid="36" source="../tilesets/exit.tsx"/>
+ <tileset firstgid="37" source="../tilesets/factory_extra.tsx"/>
  <layer id="2" name="Background" width="16" height="16">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
@@ -81,7 +82,7 @@
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 31,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,32,0,0,9,10,11,0,0,0,0,0,0,0,
-0,17,18,18,18,18,5,10,11,0,0,0,0,0,0,0,
+0,37,43,43,43,43,5,10,11,0,0,0,0,0,0,0,
 0,33,0,36,0,0,9,10,11,0,0,0,0,0,0,0,
 2,2,2,2,2,2,13,10,11,0,0,0,0,0,0,0,
 10,10,10,10,10,10,10,10,11,0,0,0,0,0,0,0,

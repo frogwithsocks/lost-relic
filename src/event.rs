@@ -77,7 +77,7 @@ fn handle_events(
         return;
     }
 
-    if won || input.just_pressed(KeyCode::L) {
+    if won {
         map_query.despawn(&mut commands, 0);
         for entity in entities.iter() {
             commands.entity(entity).despawn();

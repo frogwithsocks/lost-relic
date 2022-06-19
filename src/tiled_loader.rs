@@ -29,7 +29,7 @@ impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
         app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
-            .add_startup_system(load_box_texture)
+            .add_startup_system(load_tile_textures)
             .add_system_set(
                 SystemSet::on_update(GameState::Play)
                     .with_system(process_loaded_tile_maps.label("map_update"))
@@ -38,18 +38,22 @@ impl Plugin for TiledMapPlugin {
     }
 }
 
-fn load_box_texture(
-    asset_server: Res<AssetServer>,
-    mut commands: Commands,
-) {
-    let texture = asset_server.load("box.png");
-    commands.insert_resource(BoxTexture(texture.clone()));
+fn load_tile_textures(asset_server: Res<AssetServer>, mut commands: Commands) {
+    {
+        let texture = asset_server.load("box.png");
+        commands.insert_resource(BoxTexture(texture.clone()));
+    }
+    {
+        let texture = asset_server.load("door.png");
+        commands.insert_resource(DoorTexture(texture.clone()));
+    }
 }
 #[derive(Component)]
 pub struct WorldObject;
 
-#[derive(Clone)]
 pub struct BoxTexture(pub Handle<Image>);
+pub struct DoorTexture(pub Handle<Image>);
+
 #[derive(Bundle)]
 pub struct BoxBundle {
     #[bundle]
@@ -154,6 +158,8 @@ pub fn process_loaded_tile_maps(
     mut door_res: ResMut<DoorRes>,
     level: Res<Level>,
     box_texture: Res<BoxTexture>,
+    door_texture: Res<DoorTexture>,
+
 ) {
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
@@ -343,9 +349,7 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Movable(900.0),
                                                             flags: CollisionFlags::empty(),
                                                         },
-                                                        Slider {
-                                                            activated: false,
-                                                        },
+                                                        Slider { activated: false },
                                                         default_transform,
                                                     )),
                                                     // 34 is button
@@ -433,9 +437,9 @@ pub fn process_loaded_tile_maps(
                             commands
                                 .entity(entity)
                                 .insert_bundle(SpriteBundle {
+                                    texture: door_texture.0.clone_weak(),
                                     sprite: Sprite {
                                         custom_size: Some(size),
-                                        color: Color::BLUE,
                                         ..default()
                                     },
                                     transform,

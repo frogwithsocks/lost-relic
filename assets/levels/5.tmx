@@ -45,6 +45,9 @@
  <tileset firstgid="36" name="exit" tilewidth="32" tileheight="32" tilecount="1" columns="1">
   <image source="../exit.png" width="32" height="32"/>
  </tileset>
+ <tileset firstgid="37" name="factory_extra" tilewidth="32" tileheight="32" tilecount="9" columns="3">
+  <image source="../factory_extra.png" width="96" height="96"/>
+ </tileset>
  <layer id="2" name="Background" width="16" height="16">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
@@ -117,7 +120,7 @@
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 31,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,32,0,0,9,10,11,0,0,0,0,0,0,0,
-0,17,18,18,18,18,5,10,11,0,0,0,0,0,0,0,
+0,37,43,43,43,43,5,10,11,0,0,0,0,0,0,0,
 0,33,0,36,0,0,9,10,11,0,0,0,0,0,0,0,
 2,2,2,2,2,2,13,10,11,0,0,0,0,0,0,0,
 10,10,10,10,10,10,10,10,11,0,0,0,0,0,0,0,

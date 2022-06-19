@@ -72,7 +72,7 @@ pub fn spawn_map(level: ResMut<Level>, mut commands: Commands, asset_server: Res
         0 => spawn("WASD to move"),
         1 => spawn("Latency will delay your inputs.\nMove Carefully."),
         4 => spawn("Press R to restart the level."),
-        8 => spawn("You win or something TODO fill in"),
+        8 => spawn("You Win!\nThanks for playing"),
         _ => (),
     };
     //TODO add instructions to world
