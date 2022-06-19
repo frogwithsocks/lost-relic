@@ -1,14 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.8" tiledversion="1.8.5" orientation="orthogonal" renderorder="right-down" width="25" height="16" tilewidth="32" tileheight="32" infinite="1" nextlayerid="4" nextobjectid="1">
- <tileset firstgid="1" source="../tilesets/factory.tsx"/>
- <tileset firstgid="25" source="../tilesets/cell_tower.tsx"/>
- <tileset firstgid="27" source="../tilesets/robot.tsx"/>
- <tileset firstgid="31" source="../tilesets/markers.tsx"/>
- <tileset firstgid="32" source="../tilesets/box.tsx"/>
- <tileset firstgid="33" source="../tilesets/door.tsx"/>
- <tileset firstgid="34" source="../tilesets/button.tsx"/>
- <tileset firstgid="35" source="../tilesets/spikes.tsx"/>
- <tileset firstgid="36" source="../tilesets/exit.tsx"/>
+ <tileset firstgid="1" name="factory" tilewidth="32" tileheight="32" tilecount="24" columns="8">
+  <image source="../factory.png" width="256" height="96"/>
+ </tileset>
+ <tileset firstgid="25" name="cell tower" tilewidth="32" tileheight="32" tilecount="2" columns="1">
+  <image source="../cell_tower.png" width="32" height="64"/>
+ </tileset>
+ <tileset firstgid="27" name="robot" tilewidth="22" tileheight="32" tilecount="4" columns="4" objectalignment="center">
+  <image source="../robot.png" width="88" height="32"/>
+  <tile id="0">
+   <animation>
+    <frame tileid="0" duration="200"/>
+    <frame tileid="1" duration="200"/>
+    <frame tileid="2" duration="200"/>
+    <frame tileid="3" duration="200"/>
+   </animation>
+  </tile>
+ </tileset>
+ <tileset firstgid="31" name="markers" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../camera.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="32" name="box" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../box.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="33" name="door" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../door.png" width="32" height="32"/>
+  <tile id="0">
+   <properties>
+    <property name="id" value="blue"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="34" name="button" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../button.png" width="32" height="32"/>
+  <tile id="0">
+   <properties>
+    <property name="id" value="blue"/>
+   </properties>
+  </tile>
+ </tileset>
+ <tileset firstgid="35" name="spikes" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../spikes.png" width="32" height="32"/>
+ </tileset>
+ <tileset firstgid="36" name="exit" tilewidth="32" tileheight="32" tilecount="1" columns="1">
+  <image source="../exit.png" width="32" height="32"/>
+ </tileset>
  <layer id="2" name="Background" width="16" height="16">
   <data encoding="csv">
    <chunk x="0" y="0" width="16" height="16">
@@ -61,11 +97,11 @@
 9,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,
 9,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,
 9,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,
-9,10,11,0,0,0,0,0,0,0,0,31,0,0,0,0,
-9,10,11,0,0,0,0,0,0,0,0,0,0,0,0,0,
+9,10,11,0,36,0,0,31,0,0,0,0,0,31,0,0,
+9,10,11,0,2,0,2,0,2,0,2,0,2,0,2,0,
 9,10,11,0,0,0,25,0,0,0,0,0,0,0,0,0,
-9,10,11,27,0,0,26,34,0,0,0,32,0,0,0,0,
-9,10,12,2,2,2,2,2,2,2,2,2,2,2,2,2,
+9,10,11,27,0,0,26,0,0,0,0,0,0,0,0,0,
+9,10,12,2,2,2,2,2,35,2,35,2,35,2,35,2,
 9,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
 17,18,18,18,18,18,18,18,18,18,18,18,18,18,18,18
 </chunk>
@@ -74,16 +110,16 @@
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
+0,0,0,25,0,0,9,10,11,0,0,0,0,0,0,0,
+0,0,0,26,0,0,9,10,11,0,0,0,0,0,0,0,
+0,0,0,2,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
 0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
-0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
-0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
-0,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
-31,0,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
-0,1,2,2,2,2,13,10,11,0,0,0,0,0,0,0,
-0,17,18,18,18,18,5,10,11,0,0,0,0,0,0,0,
-0,33,0,36,0,0,9,10,11,0,0,0,0,0,0,0,
-2,2,2,2,2,2,13,10,11,0,0,0,0,0,0,0,
+0,31,0,0,0,0,9,10,11,0,0,0,0,0,0,0,
+2,0,3,0,0,0,9,10,11,0,0,0,0,0,0,0,
+0,0,17,3,0,0,9,10,11,0,0,0,0,0,0,0,
+0,0,0,0,0,1,9,10,11,0,0,0,0,0,0,0,
+35,2,2,2,2,2,13,10,11,0,0,0,0,0,0,0,
 10,10,10,10,10,10,10,10,11,0,0,0,0,0,0,0,
 18,18,18,18,18,18,18,18,19,0,0,0,0,0,0,0
 </chunk>
