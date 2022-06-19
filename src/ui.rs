@@ -89,6 +89,12 @@ fn spawn_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(ButtonBundle {
             style: Style {
                 size: Size::new(Val::Px(65.0), Val::Px(65.0)),
+                position_type: PositionType::Absolute,
+                position: Rect {
+                    top: Val::Px(5.0),
+                    right: Val::Px(15.0),
+                    ..default()
+                },
                 ..default()
             },
             image: UiImage(asset_server.load("pause_button.png")),
