@@ -58,7 +58,7 @@ pub struct BoxBundle {
 }
 impl BoxBundle {
     fn new(mut transform: Transform, texture: Handle<Image>) -> Self {
-        transform.translation.y = 9.0;
+        transform.translation.z = 9.0;
         Self {
             sprite_bundle: SpriteBundle {
                 texture: texture.clone(),
