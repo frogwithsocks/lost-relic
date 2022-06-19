@@ -29,8 +29,8 @@ fn play_button_interaction(
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
 ) {
     for interaction in interaction_query.iter() {
-        match *interaction {
-            Interaction::Clicked => match state.current() {
+        if interaction == &Interaction::Clicked {
+            match state.current() {
                 GameState::MainMenu => {
                     state.set(GameState::Play).unwrap();
                 }
@@ -38,8 +38,7 @@ fn play_button_interaction(
                     state.pop().unwrap();
                 }
                 _ => {}
-            },
-            _ => {}
+            }
         }
     }
 }

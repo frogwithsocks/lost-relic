@@ -38,10 +38,7 @@ impl Plugin for TiledMapPlugin {
     }
 }
 
-fn load_box_texture(
-    asset_server: Res<AssetServer>,
-    mut commands: Commands,
-) {
+fn load_box_texture(asset_server: Res<AssetServer>, mut commands: Commands) {
     let texture = asset_server.load("box.png");
     commands.insert_resource(BoxTexture(texture.clone()));
 }
@@ -343,9 +340,7 @@ pub fn process_loaded_tile_maps(
                                                             kind: ColliderKind::Movable(900.0),
                                                             flags: CollisionFlags::empty(),
                                                         },
-                                                        Slider {
-                                                            activated: false,
-                                                        },
+                                                        Slider { activated: false },
                                                         default_transform,
                                                     )),
                                                     // 34 is button

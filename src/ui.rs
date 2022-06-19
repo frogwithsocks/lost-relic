@@ -128,11 +128,8 @@ fn pause_button_interaction(
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<PauseButton>)>,
 ) {
     for interaction in interaction_query.iter() {
-        match interaction {
-            Interaction::Clicked => {
-                state.push(GameState::Pause).unwrap();
-            }
-            _ => {}
+        if interaction == &Interaction::Clicked {
+            state.push(GameState::Pause).unwrap();
         }
     }
 }
