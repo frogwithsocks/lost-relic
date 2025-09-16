@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::{
-    collide::{Collider, GameEvent, CollisionFlags},
+    collide::{Collider, CollisionFlags, GameEvent},
     map::spawn_map,
     slider::Slider,
     state::GameState,

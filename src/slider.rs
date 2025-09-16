@@ -1,4 +1,7 @@
-use crate::{collide::{Collider, ColliderKind}, state::GameState};
+use crate::{
+    collide::{Collider, ColliderKind},
+    state::GameState,
+};
 use bevy::prelude::*;
 
 pub struct SliderPlugin;
@@ -18,9 +21,7 @@ pub struct Slider {
     pub activated: bool,
 }
 
-fn update_slider_collider(
-    mut sliders: Query<(&mut Collider, &Slider, &mut Visibility)>,
-) {
+fn update_slider_collider(mut sliders: Query<(&mut Collider, &Slider, &mut Visibility)>) {
     for (mut collider, slider, mut visibility) in sliders.iter_mut() {
         visibility.is_visible = !slider.activated;
         if slider.activated {

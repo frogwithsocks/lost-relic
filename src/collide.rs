@@ -7,7 +7,9 @@ use bevy::{
 };
 use bitflags::bitflags;
 
-use crate::{map::BLOCK_SIZE, state::GameState, tiled_loader::TiledMap, velocity::Velocity, player::Player};
+use crate::{
+    map::BLOCK_SIZE, player::Player, state::GameState, tiled_loader::TiledMap, velocity::Velocity,
+};
 
 pub struct CollidePlugin;
 
@@ -156,7 +158,7 @@ fn handle_collisions(
     let mut update_velocity = HashSet::new();
     let mut update: HashSet<Entity> = movables.clone().into_iter().map(|(e, _)| e).collect();
 
-    while update.len() > 0 {
+    while !update.is_empty() {
         let mut again: HashSet<Entity> = HashSet::new();
         for entity in update {
             let collider = colliders.get_component::<Collider>(entity).unwrap();
@@ -203,7 +205,10 @@ fn handle_collisions(
                                         again.insert(entity);
                                         update_velocity.insert(entity);
                                         if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
+                                            positions.insert(
+                                                other_entity,
+                                                (other_position, other_flags & (!of)),
+                                            );
                                         }
                                         if other_flags.is_locked(f) {
                                             flags |= f.to_lock();
@@ -212,54 +217,68 @@ fn handle_collisions(
                                         other_position -= push;
                                         again.insert(other_entity);
                                         update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of));
+                                        positions.insert(
+                                            other_entity,
+                                            (other_position, other_flags | of),
+                                        );
                                     } else {
                                         flags |= f;
                                         position += push;
                                         again.insert(entity);
                                         update_velocity.insert(entity);
                                         if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
+                                            positions.insert(
+                                                other_entity,
+                                                (other_position, other_flags & (!of)),
+                                            );
                                         }
                                         if other_flags.is_locked(f) {
                                             flags |= f.to_lock();
                                         }
+                                    }
+                                } else if other_flags & f == CollisionFlags::empty() {
+                                    other_position -= push;
+                                    again.insert(other_entity);
+                                    update_velocity.insert(other_entity);
+                                    positions
+                                        .insert(other_entity, (other_position, other_flags | of));
+                                } else if other_flags.is_locked(f) {
+                                    flags |= f;
+                                    position += push;
+                                    again.insert(entity);
+                                    update_velocity.insert(entity);
+                                    if !other_flags.is_locked(of) {
+                                        positions.insert(
+                                            other_entity,
+                                            (other_position, other_flags & (!of)),
+                                        );
+                                    }
+                                    if other_flags.is_locked(f) {
+                                        flags |= f.to_lock();
                                     }
                                 } else {
-                                    if other_flags & f == CollisionFlags::empty() {
-                                        other_position -= push;
-                                        again.insert(other_entity);
-                                        update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of)); 
-                                    } else if other_flags.is_locked(f) {
-                                        flags |= f;
-                                        position += push;
-                                        again.insert(entity);
-                                        update_velocity.insert(entity);
-                                        if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
-                                        }
-                                        if other_flags.is_locked(f) {
-                                            flags |= f.to_lock();
-                                        } 
-                                    } else {
-                                        other_position -= push;
-                                        again.insert(other_entity);
-                                        update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of));  
-                                    }
+                                    other_position -= push;
+                                    again.insert(other_entity);
+                                    update_velocity.insert(other_entity);
+                                    positions
+                                        .insert(other_entity, (other_position, other_flags | of));
                                 }
                             }
                             ColliderKind::Death => {
-                                if entity == player_entity { events.send(GameEvent::Death); }
+                                if entity == player_entity {
+                                    events.send(GameEvent::Death);
+                                }
                             }
                             ColliderKind::Sensor => {
-                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::TOP));
+                                positions.insert(
+                                    other_entity,
+                                    (other_position, other_flags | CollisionFlags::TOP),
+                                );
                             }
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
                             }
-                            _ => {},
+                            _ => {}
                         }
                     }
                 }
@@ -302,7 +321,7 @@ fn handle_collisions(
     }
     let mut update: HashSet<Entity> = movables.clone().into_iter().map(|(e, _)| e).collect();
 
-    while update.len() > 0 {
+    while !update.is_empty() {
         let mut again: HashSet<Entity> = HashSet::new();
         for entity in update {
             let collider = colliders.get_component::<Collider>(entity).unwrap();
@@ -349,7 +368,10 @@ fn handle_collisions(
                                         again.insert(entity);
                                         update_velocity.insert(entity);
                                         if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
+                                            positions.insert(
+                                                other_entity,
+                                                (other_position, other_flags & (!of)),
+                                            );
                                         }
                                         if other_flags.is_locked(f) {
                                             flags |= f.to_lock();
@@ -358,54 +380,68 @@ fn handle_collisions(
                                         other_position -= push;
                                         again.insert(other_entity);
                                         update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of));
+                                        positions.insert(
+                                            other_entity,
+                                            (other_position, other_flags | of),
+                                        );
                                     } else {
                                         flags |= f;
                                         position += push;
                                         again.insert(entity);
                                         update_velocity.insert(entity);
                                         if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
+                                            positions.insert(
+                                                other_entity,
+                                                (other_position, other_flags & (!of)),
+                                            );
                                         }
                                         if other_flags.is_locked(f) {
                                             flags |= f.to_lock();
                                         }
+                                    }
+                                } else if other_flags & f == CollisionFlags::empty() {
+                                    other_position -= push;
+                                    again.insert(other_entity);
+                                    update_velocity.insert(other_entity);
+                                    positions
+                                        .insert(other_entity, (other_position, other_flags | of));
+                                } else if other_flags.is_locked(f) {
+                                    flags |= f;
+                                    position += push;
+                                    again.insert(entity);
+                                    update_velocity.insert(entity);
+                                    if !other_flags.is_locked(of) {
+                                        positions.insert(
+                                            other_entity,
+                                            (other_position, other_flags & (!of)),
+                                        );
+                                    }
+                                    if other_flags.is_locked(f) {
+                                        flags |= f.to_lock();
                                     }
                                 } else {
-                                    if other_flags & f == CollisionFlags::empty() {
-                                        other_position -= push;
-                                        again.insert(other_entity);
-                                        update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of)); 
-                                    } else if other_flags.is_locked(f) {
-                                        flags |= f;
-                                        position += push;
-                                        again.insert(entity);
-                                        update_velocity.insert(entity);
-                                        if !other_flags.is_locked(of) {
-                                            positions.insert(other_entity, (other_position, other_flags & (!of)));
-                                        }
-                                        if other_flags.is_locked(f) {
-                                            flags |= f.to_lock();
-                                        } 
-                                    } else {
-                                        other_position -= push;
-                                        again.insert(other_entity);
-                                        update_velocity.insert(other_entity);
-                                        positions.insert(other_entity, (other_position, other_flags | of));  
-                                    }
+                                    other_position -= push;
+                                    again.insert(other_entity);
+                                    update_velocity.insert(other_entity);
+                                    positions
+                                        .insert(other_entity, (other_position, other_flags | of));
                                 }
                             }
                             ColliderKind::Death => {
-                                if entity == player_entity { events.send(GameEvent::Death); }
+                                if entity == player_entity {
+                                    events.send(GameEvent::Death);
+                                }
                             }
                             ColliderKind::Sensor => {
-                                positions.insert(other_entity, (other_position, other_flags | CollisionFlags::TOP));
+                                positions.insert(
+                                    other_entity,
+                                    (other_position, other_flags | CollisionFlags::TOP),
+                                );
                             }
                             ColliderKind::Win => {
                                 events.send(GameEvent::Win);
                             }
-                            _ => {},
+                            _ => {}
                         }
                     }
                 }
@@ -469,7 +505,7 @@ impl CollisionFlags {
         self.contains(CollisionFlags::from_bits(bits << 4).unwrap())
     }
 
-    fn to_lock(&self) -> Self {
+    fn to_lock(self) -> Self {
         let bits = self.bits();
         assert_eq!((bits & 0x0F).count_ones(), 1);
         CollisionFlags::from_bits(bits << 4).unwrap()
@@ -520,7 +556,7 @@ impl SpatialPartition {
     // | b | d |
     // ---------
 
-    fn fill(&mut self, entities: &Vec<(Entity, &Transform, &Collider)>) {
+    fn fill(&mut self, entities: &[(Entity, &Transform, &Collider)]) {
         for (entity, transform, collider) in entities {
             let position = transform.translation;
             let (min_x, max_x, min_y, max_y) = self.spatial_index(position, collider.size);
